@@ -3,12 +3,11 @@ from fastapi import APIRouter
 from app.schemas.analytics import (
     CompetitionRatingRequest,
     CompetitionRatingResponse,
+    CompetitionsRecommendationRequest,
+    CompetitionsRecommendationResponse,
     UserRatingRequest,
     UserRatingResponse,
-    CompetitionsRecommendationResponse,
-    CompetitionsRecommendationRequest
 )
-
 from app.services.ranking import competition_rating, user_rating, recommend
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
@@ -27,8 +26,8 @@ async def calc_competition_rating(req: CompetitionRatingRequest):
     return CompetitionRatingResponse(rating=rating)
 
 
-@router.get("/api/recomend", response_model=CompetitionsRecommendationResponse)
+@router.post("/recommend", response_model=CompetitionsRecommendationResponse)
 async def recommend_competitions(req: CompetitionsRecommendationRequest):
-    return recommend(CompetitionsRecommendationRequest.user)
-
-
+    comps = [c.model_dump() for c in req.competitions]
+    results = recommend(req.user_rating, comps)
+    return CompetitionsRecommendationResponse(recommendations=results)
