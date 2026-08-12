@@ -1,0 +1,5 @@
+services:
+  front:
+    build: frontend/
+    ports:
+      - "4173:4173"
