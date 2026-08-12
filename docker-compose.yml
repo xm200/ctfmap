@@ -5,20 +5,30 @@ services:
       POSTGRES_USER: ctfmap
       POSTGRES_PASSWORD: ctfmap
       POSTGRES_DB: ctfmap
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
 
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://ctfmap:ctfmap@db:5432/ctfmap
       DATABASE_URL_SYNC: postgresql+psycopg2://ctfmap:ctfmap@db:5432/ctfmap
     depends_on:
       - db
+    networks:
+      - internal
+      - external
+
+
+networks:
+  internal:
+
+  external:
+    driver: bridge
 
 volumes:
   pgdata:
