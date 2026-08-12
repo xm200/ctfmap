@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
@@ -16,6 +18,7 @@ class UserOut(CamelModel):
     email: str
     role: str
     verified: bool
+    banned: bool
     created_at: str
     city: str | None = None
     organization: str | None = None
@@ -36,7 +39,8 @@ class PasswordChange(CamelModel):
 class UserUpdate(CamelModel):
     username: str | None = None
     email: str | None = None
-    role: str | None = None
+    role: Literal["organizer", "admin"] | None = None
     verified: bool | None = None
+    banned: bool | None = None
     city: str | None = None
     organization: str | None = None

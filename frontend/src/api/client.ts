@@ -1,4 +1,4 @@
-﻿import { clearAccessToken, getAccessToken, setAccessToken } from '../auth/tokenStore';
+import { clearAccessToken, getAccessToken, setAccessToken } from '../auth/tokenStore';
 import type { ApiError, RefreshResponse } from '../types/admin';
 
 const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim();
@@ -30,10 +30,12 @@ async function parseError(response: Response): Promise<ApiError> {
     ? 'Сервис временно недоступен.'
     : 'Запрос не выполнен.';
   try {
-    const body = await response.json() as Partial<ApiError>;
+    const body = await response.json() as Partial<ApiError> & { detail?: string };
     return {
       status: response.status,
-      message: typeof body.message === 'string' && body.message.trim() ? body.message : fallback,
+      message: typeof body.message === 'string' && body.message.trim()
+        ? body.message
+        : typeof body.detail === 'string' && body.detail.trim() ? body.detail : fallback,
       code: typeof body.code === 'string' ? body.code : undefined,
       field: typeof body.field === 'string' ? body.field : undefined,
       details: body.details && typeof body.details === 'object' ? body.details : undefined,
@@ -75,12 +77,17 @@ async function refreshAccessToken(): Promise<boolean> {
 }
 
 export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  if (!path.startsWith('/')) throw new Error('API path must start with /.');
+  if (!path.startsWith('/')) throw new Error('Путь программного интерфейса должен начинаться с /.');
   const { auth = true, retryOnUnauthorized = true, signal, ...init } = options;
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let timedOut = false;
+  const timeout = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
   const abort = () => controller.abort();
-  signal?.addEventListener('abort', abort, { once: true });
+  if (signal?.aborted) abort();
+  else signal?.addEventListener('abort', abort, { once: true });
 
   try {
     const token = auth ? getAccessToken() : null;
@@ -100,7 +107,8 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     if (response.status === 204) return undefined as T;
     return await response.json() as T;
   } catch (reason) {
-    if (reason instanceof DOMException && reason.name === 'AbortError') {
+    if (controller.signal.aborted) {
+      if (!timedOut && signal?.aborted) throw reason;
       throw { status: 0, message: 'Время ожидания запроса истекло.' } satisfies ApiError;
     }
     throw reason;
@@ -109,4 +117,3 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     signal?.removeEventListener('abort', abort);
   }
 }
-

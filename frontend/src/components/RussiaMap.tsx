@@ -153,7 +153,7 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
 
     fetch('/data/russia-regions.geojson', { signal: controller.signal })
       .then((response) => {
-        if (!response.ok) throw new Error(`GeoJSON request failed: ${response.status}`);
+        if (!response.ok) throw new Error(`Не удалось загрузить географию регионов: ${response.status}`);
         return response.json() as Promise<{ features: RegionFeature[] }>;
       })
       .then((data) => setRegions(data.features))
@@ -174,16 +174,6 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
     event,
     point: project([event.lng, event.lat]),
   })), [events, project]);
-  const connectionPaths = useMemo(() => eventPoints.slice(0, -1).map(({ event, point }, index) => {
-    const target = eventPoints[index + 1].point;
-    const controlX = (point.x + target.x) / 2;
-    const controlY = Math.min(point.y, target.y) - 46 - Math.abs(target.x - point.x) * 0.04;
-    return {
-      id: `${event.id}-${eventPoints[index + 1].event.id}`,
-      color: CATEGORY_META[event.category].color,
-      path: `M${point.x.toFixed(2)},${point.y.toFixed(2)} Q${controlX.toFixed(2)},${controlY.toFixed(2)} ${target.x.toFixed(2)},${target.y.toFixed(2)}`,
-    };
-  }), [eventPoints]);
   const hoveredRegionFeature = hoveredRegion
     ? regions.find((region) => region.properties.shapeISO === hoveredRegion)
     : null;
@@ -301,11 +291,6 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-            <linearGradient id="scan-gradient" x1="0" x2="1">
-              <stop offset="0" stopColor="#00d9ff" stopOpacity="0" />
-              <stop offset="0.5" stopColor="#00d9ff" stopOpacity="0.2" />
-              <stop offset="1" stopColor="#00d9ff" stopOpacity="0" />
-            </linearGradient>
           </defs>
 
           <g className="map-grid" aria-hidden="true">
@@ -345,17 +330,6 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
                 />
               );
             })}
-          </g>
-
-          <g className="connection-layer" aria-hidden="true">
-            {connectionPaths.map((connection, index) => (
-              <g key={connection.id}>
-                <path className="connection-line" d={connection.path} style={{ '--connection-color': connection.color } as React.CSSProperties} />
-                <circle r="2.2" fill={connection.color}>
-                  <animateMotion dur={`${5 + index * 0.35}s`} repeatCount="indefinite" path={connection.path} />
-                </circle>
-              </g>
-            ))}
           </g>
 
           <g className="event-layer">
@@ -410,7 +384,6 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
             })}
           </g>
 
-          <rect className="map-scan-beam" width="210" height={MAP_HEIGHT} fill="url(#scan-gradient)" aria-hidden="true" />
         </svg>
       )}
 
@@ -425,9 +398,9 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
 
       {hoveredRegionFeature && (
         <div className="map-region-tooltip" style={{ '--zone-color': ZONE_COLORS[getMacroZone(hoveredRegionFeature.properties.shapeISO)] } as React.CSSProperties}>
-          <span>REGION NODE</span>
+          <span>РЕГИОН</span>
           <strong>{getRegionName(hoveredRegionFeature.properties.shapeISO, hoveredRegionFeature.properties.shapeName)}</strong>
-          <small>{hoveredRegionCount} CTF // 30 DAYS</small>
+          <small>{hoveredRegionCount} CTF // 30 ДНЕЙ</small>
         </div>
       )}
     </section>

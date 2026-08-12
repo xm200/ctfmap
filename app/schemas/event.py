@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from app.schemas.user import CamelModel
 
 
@@ -17,8 +19,16 @@ class EventOut(CamelModel):
     weight: int = 0
     organizer: str | None = None
     url: str | None = None
+    registration_url: str | None = None
+    ctftime_url: str | None = None
+    ctf_news_url: str | None = None
     description: str | None = None
-    tags: list[str] = []
+    full_description: str | None = None
+    team_size: str | None = None
+    task_categories: list[str] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
+    contacts: str | None = None
+    tags: list[str] = Field(default_factory=list)
     status: str
     source: str | None = None
     start_date: str | None = None

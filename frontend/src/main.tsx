@@ -6,7 +6,7 @@ import './styles.css';
 import './feature.css';
 
 const root = document.getElementById('root');
-if (!root) throw new Error('Application root element was not found.');
+if (!root) throw new Error('Корневой элемент приложения не найден.');
 
 createRoot(root).render(
   <StrictMode>
@@ -15,5 +15,4 @@ createRoot(root).render(
     </AuthProvider>
   </StrictMode>,
 );
-
 

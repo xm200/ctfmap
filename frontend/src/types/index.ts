@@ -71,6 +71,11 @@ export interface RegionFeature {
   geometry: RegionGeometry;
 }
 
+export interface RegionFeatureCollection {
+  type: 'FeatureCollection';
+  features: RegionFeature[];
+}
+
 export interface EventTiming {
   start: Date;
   end: Date;

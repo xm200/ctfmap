@@ -41,7 +41,7 @@ export function RegionPanel({ regionId, events, onClose, onDetails }: RegionPane
           <EventCard key={event.id} event={event} compact onDetails={onDetails} />
         )) : (
           <div className="empty-state">
-            <span>NO SIGNAL</span>
+            <span>НЕТ СОБЫТИЙ</span>
             <p>На ближайшие 30 дней события не обнаружены.</p>
           </div>
         )}

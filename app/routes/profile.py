@@ -28,7 +28,7 @@ async def update_profile(
             await db.execute(select(User).where(User.email == email, User.id != user.id))
         ).scalar_one_or_none()
         if existing:
-            raise HTTPException(409, detail="Email already taken")
+            raise HTTPException(409, detail="Адрес электронной почты уже используется")
         user.email = email
     if req.telegram is not None:
         user.telegram = req.telegram if req.telegram else None
@@ -47,11 +47,11 @@ async def change_password(
     db: AsyncSession = Depends(get_db),
 ):
     if not verify_password(req.current_password, user.password_hash):
-        raise HTTPException(401, detail="Invalid current password")
+        raise HTTPException(401, detail="Неверный текущий пароль")
     if len(req.new_password) < 12 or len(req.new_password) > 128:
-        raise HTTPException(422, detail="Password must be 12-128 characters")
+        raise HTTPException(422, detail="Пароль должен содержать от 12 до 128 символов")
     if req.current_password == req.new_password:
-        raise HTTPException(422, detail="New password must differ from current")
+        raise HTTPException(422, detail="Новый пароль должен отличаться от текущего")
 
     user.password_hash = hash_password(req.new_password)
     await db.commit()

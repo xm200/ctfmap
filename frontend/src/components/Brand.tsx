@@ -8,7 +8,7 @@ export function Brand() {
       <span className="brand-mark"><i /><i /><i /></span>
       <span>
         <strong>CTF<span>MAP</span></strong>
-        <small>RUSSIAN CTF OPERATIONS</small>
+        <small>КАРТА CTF РОССИИ</small>
       </span>
     </a>
   );

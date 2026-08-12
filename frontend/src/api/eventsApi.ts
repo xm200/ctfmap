@@ -18,3 +18,7 @@ export function update(id: string, payload: EventUpdate): Promise<AdminEvent> {
     }),
   });
 }
+
+export function cancel(id: string): Promise<AdminEvent> {
+  return apiRequest<AdminEvent>(`/admin/events/${encodeURIComponent(id)}/cancel`, { method: 'PATCH' });
+}

@@ -41,16 +41,16 @@ export function EventPage({ event, onBack }: EventPageProps) {
               <p>{event.description}</p>
             </div>
             <div className="dossier-score">
-              <span>Рейтинг CTFtime</span>
+              <span>Рейтинг CTFтайм</span>
               <strong>{event.rating.toFixed(1)}</strong>
               <small>Вес события: {event.weight.toFixed(1)}</small>
             </div>
           </div>
           <div className="dossier-actions">
-            <a className="button button--primary" href={event.registrationUrl} target="_blank" rel="noreferrer">Регистрация ↗</a>
-            <a className="button button--ghost" href={event.ctfNewsUrl} target="_blank" rel="noreferrer">Читать в CTF News ↗</a>
-            <a className="button button--ghost" href={event.ctftimeUrl} target="_blank" rel="noreferrer">Страница CTFtime ↗</a>
-            <a className="button button--ghost" href={event.url} target="_blank" rel="noreferrer">Сайт организатора ↗</a>
+            {event.registrationUrl && <a className="button button--primary" href={event.registrationUrl} target="_blank" rel="noreferrer">Регистрация ↗</a>}
+            {event.ctfNewsUrl && <a className="button button--ghost" href={event.ctfNewsUrl} target="_blank" rel="noreferrer">Читать в «Новости CTF» ↗</a>}
+            {event.ctftimeUrl && <a className="button button--ghost" href={event.ctftimeUrl} target="_blank" rel="noreferrer">Страница CTFтайм ↗</a>}
+            {event.url && <a className="button button--ghost" href={event.url} target="_blank" rel="noreferrer">Сайт организатора ↗</a>}
           </div>
         </header>
 
@@ -63,7 +63,7 @@ export function EventPage({ event, onBack }: EventPageProps) {
 
         <div className="dossier-layout">
           <div className="dossier-main">
-            <section className="dossier-section">
+            {(event.fullDescription.length > 0 || event.taskCategories.length > 0) && <section className="dossier-section">
               <p className="section-kicker">01 / ОБЗОР</p>
               <h2>О соревновании</h2>
               <div className="dossier-copy">
@@ -72,10 +72,10 @@ export function EventPage({ event, onBack }: EventPageProps) {
               <div className="task-tags" aria-label="Категории заданий">
                 {event.taskCategories.map((category) => <span key={category}>{category}</span>)}
               </div>
-            </section>
+            </section>}
 
-            <section className="dossier-section">
-              <p className="section-kicker">02 / ТАЙМЛАЙН</p>
+            {event.schedule.length > 0 && <section className="dossier-section">
+              <p className="section-kicker">02 / РАСПИСАНИЕ</p>
               <h2>Расписание</h2>
               <ol className="event-timeline">
                 {event.schedule.map((item, index) => (
@@ -88,15 +88,15 @@ export function EventPage({ event, onBack }: EventPageProps) {
                   </li>
                 ))}
               </ol>
-            </section>
+            </section>}
 
-            <section className="dossier-section">
+            {event.requirements.length > 0 && <section className="dossier-section">
               <p className="section-kicker">03 / УЧАСТИЕ</p>
               <h2>Что потребуется</h2>
               <ul className="requirement-list">
                 {event.requirements.map((requirement) => <li key={requirement}>{requirement}</li>)}
               </ul>
-            </section>
+            </section>}
 
             {event.learningMaterials && event.learningMaterials.length > 0 && (
               <section className="dossier-section dossier-learning">

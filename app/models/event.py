@@ -47,7 +47,15 @@ class Event(Base):
 
     organizer: Mapped[str | None] = mapped_column(String(256))
     url: Mapped[str | None] = mapped_column(String(512))
+    registration_url: Mapped[str | None] = mapped_column(String(512))
+    ctftime_url: Mapped[str | None] = mapped_column(String(512))
+    ctf_news_url: Mapped[str | None] = mapped_column(String(512))
     description: Mapped[str | None] = mapped_column(Text)
+    full_description: Mapped[str | None] = mapped_column(Text)
+    team_size: Mapped[str | None] = mapped_column(String(80))
+    task_categories: Mapped[list | None] = mapped_column(JSON, default=list)
+    requirements: Mapped[list | None] = mapped_column(JSON, default=list)
+    contacts: Mapped[str | None] = mapped_column(String(256))
     tags: Mapped[list | None] = mapped_column(JSON, default=list)
 
     status: Mapped[EventStatus] = mapped_column(Enum(EventStatus), default=EventStatus.DRAFT)

@@ -56,18 +56,20 @@ async def get_current_user(
 ) -> User:
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing token")
+        raise HTTPException(status_code=401, detail="Токен доступа отсутствует")
     token = auth_header[7:]
     payload = decode_access_token(token)
     if not payload or "sub" not in payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Недействительный токен доступа")
     user = await db.get(User, int(payload["sub"]))
     if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        raise HTTPException(status_code=401, detail="Пользователь не найден")
+    if user.banned:
+        raise HTTPException(status_code=403, detail="Учётная запись заблокирована администратором")
     return user
 
 
 async def get_admin_user(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
+        raise HTTPException(status_code=403, detail="Требуются права администратора")
     return user

@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from './auth/AuthContext';
 import { AdminLayout } from './components/AdminLayout';
 import { LoginPage } from './pages/LoginPage';
@@ -12,7 +12,6 @@ import { EventsPage } from './pages/admin/EventsPage';
 import { RegistrationsPage } from './pages/admin/RegistrationsPage';
 import { UserEditPage } from './pages/admin/UserEditPage';
 import { UsersPage } from './pages/admin/UsersPage';
-import { VerificationPage } from './pages/admin/VerificationPage';
 
 interface BridgeRoutesProps { path: string; navigate: (path: string) => void; }
 
@@ -43,17 +42,17 @@ export function BridgeRoutes({ path, navigate }: BridgeRoutesProps) {
   }
   if (normalizedPath === '/register') return <RegisterPage onNavigate={navigate} />;
   if (isEventRegistrationPath) {
-    if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>VALIDATING SESSION</span><small>EVENT INTAKE // RU-01</small></main>;
+    if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>ПРОВЕРКА СЕАНСА</span><small>ЗАЯВКА НА СОРЕВНОВАНИЕ // РФ-01</small></main>;
     if (!auth.isAuthenticated) return null;
     return <EventRegistrationPage onNavigate={navigate} />;
   }
   if (isProfilePath) {
-    if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>VALIDATING SESSION</span><small>PERSONAL NODE // RU-01</small></main>;
+    if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>ПРОВЕРКА СЕАНСА</span><small>ЛИЧНЫЙ УЗЕЛ // РФ-01</small></main>;
     if (!auth.isAuthenticated) return null;
     return <ProfilePage onNavigate={navigate} />;
   }
   if (!isAdminPath) return null;
-  if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>VALIDATING SESSION</span><small>ADMIN GATEWAY // RU-01</small></main>;
+  if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>ПРОВЕРКА СЕАНСА</span><small>ШЛЮЗ АДМИНИСТРАТОРА // РФ-01</small></main>;
   if (!auth.isAuthenticated) return null;
   if (!auth.isAdmin) return <NotFoundPage onNavigate={navigate} />;
 
@@ -65,7 +64,6 @@ export function BridgeRoutes({ path, navigate }: BridgeRoutesProps) {
   else if (eventMatch) page = <EventEditPage id={eventMatch[1]} onNavigate={navigate} />;
   else if (normalizedPath === '/admin/users') page = <UsersPage onNavigate={navigate} />;
   else if (userMatch) page = <UserEditPage id={userMatch[1]} onNavigate={navigate} />;
-  else if (normalizedPath === '/admin/verification') page = <VerificationPage />;
   else if (normalizedPath === '/admin/registrations') page = <RegistrationsPage />;
   else return <NotFoundPage onNavigate={navigate} />;
 

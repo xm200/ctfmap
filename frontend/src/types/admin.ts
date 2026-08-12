@@ -1,4 +1,4 @@
-export type UserRole = 'participant' | 'organizer' | 'admin';
+export type UserRole = 'organizer' | 'admin';
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 export type EventStatus = 'active' | 'draft' | 'archived';
 export type EventDifficulty = '\u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0439' | '\u0421\u0440\u0435\u0434\u043d\u0438\u0439' | '\u0412\u044b\u0441\u043e\u043a\u0438\u0439' | '\u042d\u043a\u0441\u043f\u0435\u0440\u0442\u043d\u044b\u0439';
@@ -11,6 +11,7 @@ export interface User {
   email: string;
   role: UserRole;
   verified: boolean;
+  banned: boolean;
   createdAt: string;
   city?: string;
   organization?: string;
@@ -61,13 +62,21 @@ export interface AdminEvent {
   format: EventFormat;
   regionId: string;
   city: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   rating: number;
   weight: number;
   organizer: string;
   url: string;
+  registrationUrl?: string;
+  ctftimeUrl?: string;
+  ctfNewsUrl?: string;
   description: string;
+  fullDescription?: string;
+  teamSize?: string;
+  taskCategories?: string[];
+  requirements?: string[];
+  contacts?: string;
   tags: string[];
   status: EventStatus;
   source: string;
@@ -157,11 +166,12 @@ export interface UserUpdate {
   email: string;
   role: UserRole;
   verified: boolean;
+  banned: boolean;
   city: string;
   organization: string;
 }
 
-/** The only profile field a participant may change on their own account. */
+/** The only contact field a user may change on their own account. */
 export interface ProfileUpdate {
   telegram: string;
 }
