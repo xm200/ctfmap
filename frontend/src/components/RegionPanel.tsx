@@ -21,7 +21,7 @@ export function RegionPanel({ regionId, events, onClose, onDetails }: RegionPane
   return (
     <aside className="region-panel hud-panel">
       <button className="icon-button" type="button" onClick={onClose} aria-label="Закрыть">×</button>
-      <p className="eyebrow">SELECTED REGION // {ZONE_LABELS[zone]}</p>
+      <p className="eyebrow">ВЫБРАННЫЙ РЕГИОН // {ZONE_LABELS[zone]}</p>
       <h2>{getRegionName(regionId)}</h2>
       <div className="region-total">
         <strong>{String(events.length).padStart(2, '0')}</strong>

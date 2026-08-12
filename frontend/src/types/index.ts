@@ -3,6 +3,20 @@ export type EventDifficulty = 'Начальный' | 'Средний' | 'Выс�
 export type EventFormat = 'online' | 'offline' | 'hybrid';
 export type MacroZone = 'central' | 'siberia' | 'far-east';
 
+export interface EventScheduleItem {
+  offsetDays: number;
+  time: string;
+  title: string;
+  description?: string;
+}
+
+export interface LearningMaterial {
+  title: string;
+  description: string;
+  url: string;
+  level: EventDifficulty;
+}
+
 export interface CtfEvent {
   id: string;
   slug: string;
@@ -21,8 +35,18 @@ export interface CtfEvent {
   weight: number;
   organizer: string;
   url: string;
+  ctftimeUrl: string;
+  ctfNewsUrl: string;
+  registrationUrl: string;
   description: string;
+  fullDescription: string[];
   tags: string[];
+  taskCategories: string[];
+  schedule: EventScheduleItem[];
+  teamSize: string;
+  requirements: string[];
+  contacts: string;
+  learningMaterials?: LearningMaterial[];
 }
 
 export type Position = [number, number];

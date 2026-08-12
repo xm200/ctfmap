@@ -94,8 +94,8 @@ export function MapPage({ onOpenEvent }: MapPageProps) {
       />
 
       <aside className="filter-panel hud-panel">
-        <p className="panel-code">FILTER PROTOCOL</p>
-        <h2>Тип события</h2>
+        <p className="panel-code">ФИЛЬТРЫ КАРТЫ</p>
+        <h2>Тип соревнования</h2>
         {(Object.keys(CATEGORY_META) as EventCategory[]).map((category) => (
           <button
             key={category}
