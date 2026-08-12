@@ -1,4 +1,4 @@
-﻿import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as authApi from '../api/authApi';
 import type { Session, User } from '../types/admin';
 
@@ -10,6 +10,7 @@ interface AuthState {
   login: (identifier: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  updateCurrentUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -37,6 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return next.user;
   }, []);
 
+  const updateCurrentUser = useCallback((user: User) => {
+    setSession((current) => current ? { ...current, user } : current);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
@@ -53,7 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     refresh,
-  }), [session, isLoading, login, logout, refresh]);
+    updateCurrentUser,
+  }), [session, isLoading, login, logout, refresh, updateCurrentUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
