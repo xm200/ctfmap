@@ -83,7 +83,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
     <div className="noise" /><div className="auth-grid" />
     <header className="profile-top"><Brand /><div className="profile-top-actions"><span className="session-pulse"><i /> SESSION ACTIVE</span><button type="button" onClick={() => onNavigate('/')}>← MAP</button><button type="button" onClick={() => { void auth.logout().then(() => onNavigate('/login')); }}>LOGOUT</button></div></header>
     <div className="profile-content">
-      <PageHeader code="PERSONAL NODE // USER 01" title="MY PROFILE" actions={<span className="profile-role">{profile.role.toUpperCase()} // {profile.verified ? 'VERIFIED' : 'UNVERIFIED'}</span>} />
+      <PageHeader code="PERSONAL NODE // USER 01" title="MY PROFILE" actions={<div className="profile-header-actions"><span className="profile-role">{profile.role.toUpperCase()} // {profile.verified ? 'VERIFIED' : 'UNVERIFIED'}</span><button type="button" className="button admin-button admin-button--primary" onClick={() => onNavigate('/events/register')}>REGISTER EVENT →</button></div>} />
       {error && <InlineNotice kind="error">{error}</InlineNotice>}{success && <InlineNotice kind="success">{success}</InlineNotice>}
       <div className="hud-panel profile-window">
         <section className="profile-contact"><div className="panel-heading"><div><span className="panel-code">CONTACT</span><h2>TELEGRAM</h2></div></div>
