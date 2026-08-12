@@ -40,7 +40,7 @@ https://ctfmap.ru/api/*   -> backend
 
 ## 2. Общие правила API
 
-- Формат з��просов и ответов: JSON.
+- Формат запросов и ответов: JSON.
 - Названия JSON-полей: `camelCase`.
 - Кодировка: UTF-8.
 - Все даты/время: ISO 8601. Для полей событий в текущей админ-форме нужны даты `YYYY-MM-DD`.
@@ -103,7 +103,7 @@ https://ctfmap.ru/api/*   -> backend
 - cookie: `HttpOnly`, `Secure` в production, `SameSite=Lax`, `Path=/api`;
 - для реально cross-site-развёртывания потребуется `SameSite=None; Secure`;
 - на refresh/logout проверять заголовок `Origin` по allowlist;
-- не доверять `role`, `verified` или `userId` из клиен��а — брать пользователя из JWT/сессии.
+- не доверять `role`, `verified` или `userId` из клиента — брать пользователя из JWT/сессии.
 
 ### Структура пользователя
 
@@ -292,7 +292,104 @@ logout браузер сохранит рабочую refresh-сессию. Дл
 }
 ```
 
-## 5. Административные ручки
+## 5. Пользовательская заявка на регистрацию соревнования
+
+### `POST /events/registrations`
+
+Ручка требует авторизацию, но доступна любой авторизованной роли. Идентификатор автора заявки backend
+берёт из `sub` access token. Заявка должна создаваться со статусом `pending` и **не должна публиковать
+событие автоматически**.
+
+Запрос:
+
+```json
+{
+  "title": "Siberian CTF 2026",
+  "shortTitle": "SIBCTF 2026",
+  "organizer": "SibCTF Team",
+  "contact": "@sibctf",
+  "startDate": "2026-09-20",
+  "endDate": "2026-09-21",
+  "format": "hybrid",
+  "category": "elite",
+  "difficulty": "Высокий",
+  "city": "Новосибирск",
+  "region": "RU-NVS",
+  "url": "https://sibctf.example.com",
+  "registrationUrl": "https://sibctf.example.com/register",
+  "ctftimeUrl": "https://ctftime.org/event/1234",
+  "ctfNewsUrl": "https://ctfnews.ru/event/1234",
+  "description": "Краткий анонс соревнования для карточки на карте.",
+  "fullDescription": "Подробное описание формата и содержания соревнования.",
+  "teamSize": "1–5 участников",
+  "taskCategories": ["Web", "Pwn", "Reverse", "Crypto"],
+  "tags": ["Jeopardy", "Team"],
+  "requirements": [
+    "Предварительная регистрация",
+    "Ноутбук и стабильное интернет-соединение"
+  ]
+}
+```
+
+Поля `ctftimeUrl` и `ctfNewsUrl` необязательны. Остальные поля обязательны; `city` может быть строкой
+`Онлайн` для полностью онлайн-события.
+
+Backend должен повторить frontend-валидацию:
+
+- `title`: 3–160 символов;
+- `shortTitle`: 2–40 символов;
+- `organizer`: 2–160 символов;
+- `contact`: 3–160 символов;
+- дата начала не находится в прошлом;
+- дата завершения не раньше даты начала;
+- `region` входит в согласованный список ISO-кодов frontend (`RU-NVS`, `RU-MOW` и т. п.);
+- все переданные URL имеют только `http`/`https`, максимум 500 символов;
+- `description`: 30–1000 символов;
+- `fullDescription`: 50–5000 символов;
+- массивы очищены от пустых/повторяющихся значений и имеют разумные лимиты;
+- пользователь не имеет другой активной идентичной заявки (иначе `409`).
+
+Успех: `201 Created`. В `Location` можно вернуть URL созданного ресурса. Тело ответа — полный тикет:
+
+```json
+{
+  "id": "reg_01",
+  "title": "Siberian CTF 2026",
+  "shortTitle": "SIBCTF 2026",
+  "organizer": "SibCTF Team",
+  "contact": "@sibctf",
+  "startDate": "2026-09-20",
+  "endDate": "2026-09-21",
+  "format": "hybrid",
+  "category": "elite",
+  "difficulty": "Высокий",
+  "city": "Новосибирск",
+  "region": "RU-NVS",
+  "url": "https://sibctf.example.com",
+  "registrationUrl": "https://sibctf.example.com/register",
+  "ctftimeUrl": "https://ctftime.org/event/1234",
+  "ctfNewsUrl": "https://ctfnews.ru/event/1234",
+  "description": "Краткий анонс соревнования для карточки на карте.",
+  "fullDescription": "Подробное описание формата и содержания соревнования.",
+  "teamSize": "1–5 участников",
+  "taskCategories": ["Web", "Pwn", "Reverse", "Crypto"],
+  "tags": ["Jeopardy", "Team"],
+  "requirements": ["Предварительная регистрация"],
+  "status": "pending"
+}
+```
+
+Для полевой ошибки backend возвращает `422` с `field`, например:
+
+```json
+{
+  "message": "Дата окончания не может быть раньше даты начала.",
+  "code": "INVALID_DATE_RANGE",
+  "field": "endDate"
+}
+```
+
+## 6. Административные ручки
 
 Все `/admin/*` требуют:
 
@@ -447,22 +544,35 @@ backend должен валидировать это повторно. Повт�
 
 #### `GET /admin/registrations`
 
-Ответ `200`: массив:
+Ответ `200`: массив полных тикетов. Он должен включать все поля, принятые в
+`POST /events/registrations`, чтобы модератор видел полное описание, классификацию, ссылки,
+категории заданий, теги и требования. Дополнительно возвращаются служебные поля `id`, `status`
+и необязательный `comment`:
 
 ```json
 [
   {
     "id": "reg_01",
     "title": "Siberian CTF 2026",
+    "shortTitle": "SIBCTF 2026",
     "organizer": "SibCTF Team",
     "contact": "@sibctf",
     "startDate": "2026-08-20",
     "endDate": "2026-08-21",
     "format": "offline",
+    "category": "elite",
+    "difficulty": "Высокий",
     "city": "Новосибирск",
-    "region": "novosibirsk-oblast",
+    "region": "RU-NVS",
     "url": "https://example.com",
-    "description": "Описание соревнования",
+    "registrationUrl": "https://example.com/register",
+    "ctftimeUrl": "https://ctftime.org/event/1234",
+    "description": "Краткое описание соревнования",
+    "fullDescription": "Подробное описание соревнования",
+    "teamSize": "1–5 участников",
+    "taskCategories": ["Web", "Pwn", "Crypto"],
+    "tags": ["Jeopardy", "Team"],
+    "requirements": ["Предварительная регистрация"],
     "status": "pending",
     "comment": ""
   }
@@ -481,7 +591,7 @@ backend должен валидировать это повторно. Повт�
 `status`: `approved | rejected`; при отклонении комментарий обязателен. Ответ `200`: обновлённая заявка.
 При одобрении создание/публикацию события и закрытие заявки рекомендуется выполнять транзакционно.
 
-## 6. Публичная карта
+## 7. Публичная карта
 
 Сейчас карта и страницы соревнований читают демонстрационные данные из
 `frontend/src/data/events.ts`, то есть ещё не вызывают backend.
@@ -499,7 +609,7 @@ GET /api/v1/events/{slug}
 `CtfEvent` использует `startOffsetDays`/`durationDays`, а контракт backend — абсолютные `startAt`/`endAt`.
 Правильный вариант — использовать абсолютные ISO-даты от backend и адаптировать frontend.
 
-## 7. CORS для локальной разработки
+## 8. CORS для локальной разработки
 
 Если frontend работает на `http://localhost:5173`, а backend на `http://localhost:8000`, backend должен
 отвечать минимум такими заголовками:
@@ -518,7 +628,7 @@ Backend должен корректно отвечать на preflight `OPTIONS
 Если команда использует и `localhost`, и `127.0.0.1`, оба origin нужно явно добавить в allowlist либо
 всем использовать один вариант. Для cookie это разные host.
 
-## 8. Развёртывание SPA
+## 9. Развёртывание SPA
 
 Маршруты `/login`, `/register`, `/profile`, `/admin/*`, `/events/*` обрабатывает React.
 Веб-сервер должен:
@@ -528,19 +638,21 @@ Backend должен корректно отвечать на preflight `OPTIONS
 3. для остальных неизвестных **не-API** маршрутов возвращать `frontend/dist/index.html`;
 4. никогда не подменять API-ошибки HTML-файлом SPA.
 
-## 9. Минимальная последовательность подключения
+## 10. Минимальная последовательность подключения
 
 1. Backend реализует `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`.
 2. Настраивает refresh-cookie, JWT, CORS и единый формат ошибок.
 3. Реализует `/users/me` и `/users/me/password`.
-4. Создаёт admin middleware и ручки `/admin/*`.
-5. Frontend получает `VITE_API_BASE_URL` и запускается через `npm run dev`.
-6. Проверяются сценарии: регистрация → вход → F5/refresh → профиль → истечение access token → logout.
-7. Проверяется запрет `/admin/*` для participant и доступ для admin.
-8. Удаляется тестовый вход `admin/admin`.
-9. Отдельно подключаются публичные данные карты.
+4. Реализует создание тикета `POST /events/registrations`.
+5. Создаёт admin middleware и ручки `/admin/*`.
+6. Frontend получает `VITE_API_BASE_URL` и запускается через `npm run dev`.
+7. Проверяются сценарии: регистрация → вход → F5/refresh → профиль → создание тикета → logout.
+8. Проверяется появление созданного тикета в `/admin/registrations`, его одобрение и отклонение.
+9. Проверяется запрет `/admin/*` для participant и доступ для admin.
+10. Удаляется тестовый вход `admin/admin`.
+11. Отдельно подключаются публичные данные карты.
 
-## 10. Чек-лист приёмки backend
+## 11. Чек-лист приёмки backend
 
 - [ ] Все ответы используют camelCase и точные enum из контракта.
 - [ ] Массивы не обёрнуты в `items`/`data`.
@@ -552,6 +664,8 @@ Backend должен корректно отвечать на preflight `OPTIONS
 - [ ] Пароли хешируются Argon2id или bcrypt и никогда не возвращаются в API/логах.
 - [ ] Регистрация, login и refresh защищены rate limit.
 - [ ] Роли и доступ проверяет backend, а не только React.
+- [ ] Создание тикета всегда даёт статус `pending` и само не публикует событие.
+- [ ] Полный пользовательский тикет виден администратору в `/admin/registrations`.
 - [ ] Критические admin-изменения записываются в audit log.
 - [ ] Протестированы duplicate email/username, неверный пароль, истёкший access/refresh token.
 - [ ] Для SPA настроен fallback на `index.html`, но только вне `/api/*`.

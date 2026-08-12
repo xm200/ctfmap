@@ -3,6 +3,7 @@ import { useAuth } from './auth/AuthContext';
 import { AdminLayout } from './components/AdminLayout';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { EventRegistrationPage } from './pages/EventRegistrationPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
@@ -17,7 +18,7 @@ interface BridgeRoutesProps { path: string; navigate: (path: string) => void; }
 
 export function isBridgePath(path: string): boolean {
   const normalizedPath = path.replace(/\/$/, '') || '/';
-  return normalizedPath === '/login' || normalizedPath === '/register' || normalizedPath === '/profile'
+  return normalizedPath === '/login' || normalizedPath === '/register' || normalizedPath === '/profile' || normalizedPath === '/events/register'
     || normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');
 }
 
@@ -27,7 +28,8 @@ export function BridgeRoutes({ path, navigate }: BridgeRoutesProps) {
   const normalizedPath = path.replace(/\/$/, '') || '/';
   const isAdminPath = normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');
   const isProfilePath = normalizedPath === '/profile';
-  const requiresAuth = isAdminPath || isProfilePath;
+  const isEventRegistrationPath = normalizedPath === '/events/register';
+  const requiresAuth = isAdminPath || isProfilePath || isEventRegistrationPath;
 
   useEffect(() => {
     if (requiresAuth && !auth.isLoading && !auth.isAuthenticated) navigate('/login');
@@ -40,6 +42,11 @@ export function BridgeRoutes({ path, navigate }: BridgeRoutesProps) {
     }} />;
   }
   if (normalizedPath === '/register') return <RegisterPage onNavigate={navigate} />;
+  if (isEventRegistrationPath) {
+    if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>VALIDATING SESSION</span><small>EVENT INTAKE // RU-01</small></main>;
+    if (!auth.isAuthenticated) return null;
+    return <EventRegistrationPage onNavigate={navigate} />;
+  }
   if (isProfilePath) {
     if (auth.isLoading) return <main className="boot-screen"><div className="noise" /><i /><span>VALIDATING SESSION</span><small>PERSONAL NODE // RU-01</small></main>;
     if (!auth.isAuthenticated) return null;

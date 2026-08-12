@@ -211,6 +211,14 @@ input, select, textarea { font: inherit; color: inherit; }
 .ticket-grid b, .ticket-grid a { color: #b4c0d3; font: 500 9px 'IBM Plex Mono',monospace; text-decoration: none; }
 .ticket-details { grid-column: 1 / -1; }
 .ticket-details p { margin: 0; color: #919caf; font-size: 11px; line-height: 1.55; }
+.ticket-details .ticket-full-description { margin-top: 13px; padding-top: 13px; border-top: 1px solid rgba(129,156,207,.12); white-space: pre-line; }
+.ticket-details ul { margin: 0; padding-left: 18px; color: #919caf; font-size: 12px; line-height: 1.7; }
+.ticket-links { display: flex; flex-wrap: wrap; gap: 9px 20px; }
+.ticket-links > span:first-child { flex-basis: 100%; margin: 0; }
+.ticket-links > span:not(:first-child) { display: inline-flex; align-items: center; gap: 9px; margin: 0; }
+.ticket-links > span b { color: #66738a; font: 500 10px 'IBM Plex Mono', monospace; }
+.ticket-links > span a { color: var(--cyan); }
+.ticket-links > span em { color: #ff6578; font: normal 10px 'IBM Plex Mono', monospace; }
 .ticket-card > .field { margin: 14px 0; }
 .ticket-card > footer { display: flex; justify-content: flex-end; gap: 9px; padding-top: 18px; border-top: 1px solid var(--line); }
 .admin-button--approve { color: #62f0ad; border-color: rgba(98,240,173,.35); background: rgba(98,240,173,.06); }
@@ -295,6 +303,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .profile-content { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding-top: 48px; }
 .profile-page .admin-page-header { margin-bottom: 26px; }
 .profile-role { align-self: center; color: var(--cyan); font: 11px 'IBM Plex Mono', monospace; letter-spacing: 1px; }
+.profile-header-actions { display: flex; align-items: center; gap: 18px; }
+.profile-header-actions .button { min-height: 44px; }
 .hud-panel { border: 1px solid var(--line); background: rgba(9, 13, 24, .8); box-shadow: 0 18px 45px rgba(0,0,0,.2); }
 .profile-window { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
 .profile-contact, .profile-security { padding: 25px; }
@@ -308,4 +318,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .profile-hint { color: #8290a7; font-size: 13px; line-height: 1.55; }
 .profile-security > .admin-button { margin-top: 25px; }
 .password-form .panel-code { margin-bottom: 14px; }
-@media (max-width: 850px) { .profile-page { padding: 20px 22px 45px; } .profile-top-actions { gap: 9px; } .session-pulse { display: none; } .profile-window { grid-template-columns: 1fr; } .profile-security { border-top: 1px solid var(--line); border-left: 0; } .profile-content { padding-top: 30px; } }
+.event-registration-page { overflow: visible; }
+.event-registration-content { max-width: 1240px; }
+.event-registration-form .form-section > header small { display: block; margin-top: 10px; color: #536077; letter-spacing: .8px; }
+.event-registration-form .field--error input, .event-registration-form .field--error select, .event-registration-form .field--error textarea { border-color: #ff5267; box-shadow: inset 2px 0 #ff5267; }
+.event-registration-actions { align-items: center; }
+.event-registration-actions p { flex: 1; margin: 0; color: #66738a; font-size: 12px; line-height: 1.55; }
+.submission-success { max-width: 720px; margin: 70px auto 0; padding: 48px; text-align: center; border-left: 2px solid #62f0ad; }
+.submission-success > span { color: #62f0ad; font: 600 11px 'IBM Plex Mono', monospace; letter-spacing: 1.4px; }
+.submission-success h2 { margin: 16px 0 10px; font-size: 34px; }
+.submission-success p { color: #93a0b5; line-height: 1.7; }
+.submission-success p b { color: var(--cyan); font-family: 'IBM Plex Mono', monospace; }
+.submission-success > div { display: flex; justify-content: center; gap: 10px; margin-top: 28px; }
+@media (max-width: 850px) { .profile-page { padding: 20px 22px 45px; } .profile-top-actions { gap: 9px; } .session-pulse { display: none; } .profile-window { grid-template-columns: 1fr; } .profile-security { border-top: 1px solid var(--line); border-left: 0; } .profile-content { padding-top: 30px; } .profile-header-actions { align-items: flex-end; flex-direction: column; gap: 9px; } .event-registration-form .form-section { grid-template-columns: 1fr; } .event-registration-form .form-section > header { border-right: 0; border-bottom: 1px solid var(--line); } .event-registration-form .form-grid { grid-template-columns: 1fr; } .event-registration-form .field--wide { grid-column: auto; } .event-registration-actions { align-items: stretch; flex-direction: column; } }

@@ -88,17 +88,52 @@ export interface VerificationTicket {
 export interface CompetitionRegistrationTicket {
   id: string;
   title: string;
+  shortTitle?: string;
   organizer: string;
   contact: string;
   startDate: string;
   endDate: string;
   format: EventFormat;
+  category?: EventCategory;
+  difficulty?: EventDifficulty;
   city: string;
   region: string;
   url: string;
+  registrationUrl?: string;
+  ctftimeUrl?: string;
+  ctfNewsUrl?: string;
   description: string;
+  fullDescription?: string;
+  teamSize?: string;
+  taskCategories?: string[];
+  tags?: string[];
+  requirements?: string[];
   status: ReviewStatus;
   comment?: string;
+}
+
+export interface CompetitionRegistrationRequest {
+  title: string;
+  shortTitle: string;
+  organizer: string;
+  contact: string;
+  startDate: string;
+  endDate: string;
+  format: EventFormat;
+  category: EventCategory;
+  difficulty: EventDifficulty;
+  city: string;
+  region: string;
+  url: string;
+  registrationUrl: string;
+  ctftimeUrl?: string;
+  ctfNewsUrl?: string;
+  description: string;
+  fullDescription: string;
+  teamSize: string;
+  taskCategories: string[];
+  tags: string[];
+  requirements: string[];
 }
 
 export interface EventUpdate {
