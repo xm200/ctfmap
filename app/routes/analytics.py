@@ -5,8 +5,11 @@ from app.schemas.analytics import (
     CompetitionRatingResponse,
     UserRatingRequest,
     UserRatingResponse,
+    CompetitionsRecommendationResponse,
+    CompetitionsRecommendationRequest
 )
-from app.services.ranking import competition_rating, user_rating
+
+from app.services.ranking import competition_rating, user_rating, recommend
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -22,3 +25,10 @@ async def calc_user_rating(req: UserRatingRequest):
 async def calc_competition_rating(req: CompetitionRatingRequest):
     rating = competition_rating(req.participant_ratings)
     return CompetitionRatingResponse(rating=rating)
+
+
+@router.get("/api/recomend", response_model=CompetitionsRecommendationResponse)
+async def recommend_competitions(req: CompetitionsRecommendationRequest):
+    return recommend(CompetitionsRecommendationRequest.user)
+
+

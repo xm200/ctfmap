@@ -16,3 +16,6 @@ class ParsedCompetition(Base):
     location: Mapped[str] = mapped_column(String(256))
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+class User(Base):
+    pass
