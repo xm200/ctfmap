@@ -1,1 +1,1 @@
-from app.routes import analytics, parser
+from app.routes import admin, analytics, auth, parser, profile
