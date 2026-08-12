@@ -33,7 +33,7 @@ async function parseError(response: Response): Promise<ApiError> {
     const body = await response.json() as Partial<ApiError>;
     return {
       status: response.status,
-      message: fallback,
+      message: typeof body.message === 'string' && body.message.trim() ? body.message : fallback,
       code: typeof body.code === 'string' ? body.code : undefined,
       field: typeof body.field === 'string' ? body.field : undefined,
       details: body.details && typeof body.details === 'object' ? body.details : undefined,
@@ -109,5 +109,4 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     signal?.removeEventListener('abort', abort);
   }
 }
-
 
