@@ -1,5 +1,45 @@
 services:
-  front:
-    build: frontend/
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ctfmap
+      POSTGRES_PASSWORD: ctfmap
+      POSTGRES_DB: ctfmap
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  api:
+    build: .
     ports:
-      - "4173:4173"
+      - "8080:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ctfmap:ctfmap@db:5432/ctfmap
+      DATABASE_URL_SYNC: postgresql+psycopg2://ctfmap:ctfmap@db:5432/ctfmap
+    depends_on:
+      - db
+    networks:
+      - internal
+      - external
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080/api
+    depends_on:
+      - api
+    networks:
+      - external
+
+
+networks:
+  internal:
+
+  external:
+    driver: bridge
+
+volumes:
+  pgdata:
