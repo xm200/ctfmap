@@ -3,9 +3,7 @@ import { Brand } from '../components/Brand';
 import { InlineNotice, LoadingPanel, PageHeader } from '../components/AdminUi';
 import { useAuth } from '../auth/AuthContext';
 import * as profileApi from '../api/profileApi';
-import type { ApiError, ProfileUpdate, User } from '../types/admin';
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import type { ApiError, User } from '../types/admin';
 
 function issueMessage(reason: unknown, fallback: string): string {
   const issue = reason as Partial<ApiError>;
@@ -20,20 +18,10 @@ function normalizeTelegram(value: string): string {
   return trimmed ? `@${trimmed}` : '';
 }
 
-function formFromUser(user: User): ProfileUpdate {
-  return {
-    username: user.username,
-    email: user.email,
-    city: user.city ?? '',
-    organization: user.organization ?? '',
-    telegram: user.telegram ?? '',
-  };
-}
-
 export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const auth = useAuth();
   const [profile, setProfile] = useState<User | null>(auth.currentUser);
-  const [form, setForm] = useState<ProfileUpdate | null>(auth.currentUser ? formFromUser(auth.currentUser) : null);
+  const [telegram, setTelegram] = useState(auth.currentUser?.telegram ?? '');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -49,7 +37,7 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
     profileApi.get(controller.signal)
       .then((next) => {
         setProfile(next);
-        setForm(formFromUser(next));
+        setTelegram(next.telegram ?? '');
         setTelegramOpen(Boolean(next.telegram));
         auth.updateCurrentUser(next);
       })
@@ -60,25 +48,16 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
     return () => controller.abort();
   }, [auth.updateCurrentUser]);
 
-  const updateField = (field: keyof ProfileUpdate, value: string) => {
-    setForm((current) => current ? { ...current, [field]: value } : current);
-    setError('');
-    setSuccess('');
-  };
-
-  const saveProfile = async (event: React.FormEvent) => {
+  const saveTelegram = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form) return;
-    const next = { ...form, username: form.username.trim(), email: form.email.trim(), telegram: normalizeTelegram(form.telegram) };
-    if (next.username.length < 3) return setError('Имя пользователя должно содержать минимум 3 символа.');
-    if (!emailPattern.test(next.email)) return setError('Введите корректный email.');
-    if (next.telegram && !/^@[A-Za-z0-9_]{5,32}$/.test(next.telegram)) return setError('Укажите Telegram username или ссылку t.me.');
+    const normalized = normalizeTelegram(telegram);
+    if (normalized && !/^@[A-Za-z0-9_]{5,32}$/.test(normalized)) return setError('Укажите Telegram username или ссылку t.me.');
     setSaving(true); setError(''); setSuccess('');
     try {
-      const updated = await profileApi.update(next);
-      setProfile(updated); setForm(formFromUser(updated)); auth.updateCurrentUser(updated);
-      setSuccess('Профиль сохранён.');
-    } catch (reason) { setError(issueMessage(reason, 'Не удалось сохранить профиль.')); }
+      const updated = await profileApi.update({ telegram: normalized });
+      setProfile(updated); setTelegram(updated.telegram ?? ''); setTelegramOpen(Boolean(updated.telegram)); auth.updateCurrentUser(updated);
+      setSuccess('Telegram сохранён.');
+    } catch (reason) { setError(issueMessage(reason, 'Не удалось сохранить Telegram.')); }
     finally { setSaving(false); }
   };
 
@@ -97,31 +76,21 @@ export function ProfilePage({ onNavigate }: { onNavigate: (path: string) => void
     finally { setPasswordSaving(false); }
   };
 
-  if (loading && !form) return <main className="profile-page"><div className="noise" /><header className="profile-top"><Brand /><button type="button" onClick={() => onNavigate('/')}>← RETURN TO MAP</button></header><LoadingPanel label="LOADING PERSONAL NODE" /></main>;
-  if (!profile || !form) return <main className="profile-page"><div className="noise" /><header className="profile-top"><Brand /></header><InlineNotice kind="error">Профиль недоступен.</InlineNotice></main>;
+  if (loading && !profile) return <main className="profile-page"><div className="noise" /><header className="profile-top"><Brand /><button type="button" onClick={() => onNavigate('/')}>← RETURN TO MAP</button></header><LoadingPanel label="LOADING PERSONAL NODE" /></main>;
+  if (!profile) return <main className="profile-page"><div className="noise" /><header className="profile-top"><Brand /></header><InlineNotice kind="error">Профиль недоступен.</InlineNotice></main>;
 
   return <main className="profile-page">
     <div className="noise" /><div className="auth-grid" />
     <header className="profile-top"><Brand /><div className="profile-top-actions"><span className="session-pulse"><i /> SESSION ACTIVE</span><button type="button" onClick={() => onNavigate('/')}>← MAP</button><button type="button" onClick={() => { void auth.logout().then(() => onNavigate('/login')); }}>LOGOUT</button></div></header>
     <div className="profile-content">
-      <PageHeader code="PERSONAL NODE // USER 01" title="MY PROFILE" description="Управление персональными данными участника CTFMAP." actions={<span className="profile-role">{profile.role.toUpperCase()} // {profile.verified ? 'VERIFIED' : 'UNVERIFIED'}</span>} />
+      <PageHeader code="PERSONAL NODE // USER 01" title="MY PROFILE" actions={<span className="profile-role">{profile.role.toUpperCase()} // {profile.verified ? 'VERIFIED' : 'UNVERIFIED'}</span>} />
       {error && <InlineNotice kind="error">{error}</InlineNotice>}{success && <InlineNotice kind="success">{success}</InlineNotice>}
-      <div className="profile-grid">
-        <form className="hud-panel profile-form" onSubmit={saveProfile}>
-          <div className="panel-heading"><div><span className="panel-code">ACCOUNT DATA</span><h2>PERSONAL IDENTITY</h2></div><small>EDITABLE FIELDS</small></div>
-          <div className="profile-fields">
-            <label className="field"><span>USERNAME</span><input value={form.username} onChange={(e) => updateField('username', e.target.value)} maxLength={64} autoComplete="username" required /></label>
-            <label className="field"><span>EMAIL</span><input type="email" value={form.email} onChange={(e) => updateField('email', e.target.value)} maxLength={254} autoComplete="email" required /></label>
-            <label className="field"><span>CITY</span><input value={form.city} onChange={(e) => updateField('city', e.target.value)} maxLength={120} /></label>
-            <label className="field"><span>ORGANIZATION</span><input value={form.organization} onChange={(e) => updateField('organization', e.target.value)} maxLength={160} /></label>
-          </div>
-          <div className="profile-actions"><button className="button admin-button admin-button--primary" disabled={saving}>{saving ? 'SAVING...' : 'SAVE PROFILE'} <span>→</span></button></div>
-        </form>
-        <section className="hud-panel profile-security"><div className="panel-heading"><div><span className="panel-code">CONTACT / SECURITY</span><h2>ACCOUNT CONTROLS</h2></div></div>
+      <div className="hud-panel profile-window">
+        <section className="profile-contact"><div className="panel-heading"><div><span className="panel-code">CONTACT</span><h2>TELEGRAM</h2></div></div>
           <div className="contact-control"><div><span>TELEGRAM CONTACT</span><strong>{profile.telegram || 'NOT CONNECTED'}</strong></div><button type="button" className="button admin-button" onClick={() => setTelegramOpen((open) => !open)}>{profile.telegram ? 'UPDATE TELEGRAM' : 'ADD TELEGRAM'}</button></div>
-          {telegramOpen && <p className="profile-hint">Введите username или ссылку https://t.me/username. Контакт будет сохранён вместе с профилем.</p>}
-          {telegramOpen && <label className="field"><span>TELEGRAM USERNAME</span><input value={form.telegram} onChange={(e) => updateField('telegram', e.target.value)} maxLength={45} autoComplete="off" /></label>}
-          <div className="security-divider" />
+          {telegramOpen && <form className="telegram-form" onSubmit={saveTelegram}><p className="profile-hint">Введите username или ссылку https://t.me/username.</p><label className="field"><span>TELEGRAM USERNAME</span><input value={telegram} onChange={(e) => { setTelegram(e.target.value); setError(''); setSuccess(''); }} maxLength={45} autoComplete="off" /></label><div className="profile-actions"><button type="button" className="button admin-button" onClick={() => { setTelegramOpen(false); setTelegram(profile.telegram ?? ''); }}>CANCEL</button><button className="button admin-button admin-button--primary" disabled={saving}>{saving ? 'SAVING...' : 'SAVE TELEGRAM'}</button></div></form>}
+        </section>
+        <section className="profile-security"><div className="panel-heading"><div><span className="panel-code">SECURITY</span><h2>PASSWORD</h2></div></div>
           {!passwordOpen ? <button type="button" className="button admin-button" onClick={() => { setPasswordOpen(true); setError(''); }}>CHANGE PASSWORD <span>→</span></button> : <form className="password-form" onSubmit={changePassword}>
             <p className="panel-code">PASSWORD ROTATION</p><label className="field"><span>CURRENT PASSWORD</span><input type="password" value={passwords.currentPassword} onChange={(e) => setPasswords((p) => ({ ...p, currentPassword: e.target.value }))} autoComplete="current-password" maxLength={128} required /></label>
             <label className="field"><span>NEW PASSWORD</span><input type="password" value={passwords.newPassword} onChange={(e) => setPasswords((p) => ({ ...p, newPassword: e.target.value }))} minLength={12} maxLength={128} autoComplete="new-password" required /></label>

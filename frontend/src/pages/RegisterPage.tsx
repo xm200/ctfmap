@@ -22,11 +22,10 @@ export function RegisterPage({ onNavigate }: { onNavigate: (path: string) => voi
     catch (reason) { setServerError((reason as ApiError).message || 'Не удалось создать узел.'); }
     finally { setLoading(false); }
   };
-  return <main className="auth-page auth-page--register"><div className="noise" /><div className="auth-grid" />
+  return <main className="auth-page auth-page--register"><div className="noise" />
     <header className="auth-top"><Brand /><button type="button" onClick={() => onNavigate('/')}>← RETURN TO MAP</button></header>
-    <section className="auth-brief"><p className="panel-code">NEW IDENTITY // 02</p><h1>JOIN THE<br /><span>NETWORK</span></h1><p>Создайте персональный узел участника. После регистрации профиль можно отправить на верификацию.</p><div className="auth-telemetry"><span><i /> REGISTRY ONLINE</span><span>PROFILE <b>PARTICIPANT</b></span></div></section>
     <form className="auth-panel" onSubmit={submit} noValidate>
-      <div className="auth-panel-head"><span>IDENTITY PROVISIONING</span><b>AUTH / REGISTER</b></div><h2>Регистрация</h2><p className="form-intro">Основные данные нового участника сети.</p>
+      <div className="auth-panel-head"><span>IDENTITY PROVISIONING</span><b>AUTH / REGISTER</b></div><h2>Регистрация</h2>
       {success && <InlineNotice kind="success">Узел участника создан. <button type="button" onClick={() => onNavigate('/login')}>Перейти ко входу →</button></InlineNotice>}
       {serverError && <InlineNotice kind="error">{serverError}</InlineNotice>}
       <div className="form-grid form-grid--auth">
@@ -40,4 +39,3 @@ export function RegisterPage({ onNavigate }: { onNavigate: (path: string) => voi
     </form>
   </main>;
 }
-

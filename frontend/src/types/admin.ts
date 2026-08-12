@@ -126,12 +126,8 @@ export interface UserUpdate {
   organization: string;
 }
 
-/** Fields a participant may change on their own account. */
+/** The only profile field a participant may change on their own account. */
 export interface ProfileUpdate {
-  username: string;
-  email: string;
-  city: string;
-  organization: string;
   telegram: string;
 }
 

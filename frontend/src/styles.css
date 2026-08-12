@@ -99,11 +99,14 @@ button { color: inherit; }
 .system-status span { display: block; color: #66ffbf; font-size: 12px; letter-spacing: 1.2px; }
 .system-status span i { display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: #66ffbf; box-shadow: 0 0 10px #66ffbf; animation: pulse 1.5s ease-in-out infinite; }
 .system-status small { font-size: 11px; color: #69758c; }
+.map-profile-button { justify-self: end; min-width: 150px; height: 42px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; gap: 22px; border: 1px solid rgba(0, 217, 255, .35); background: rgba(0, 217, 255, .035); color: var(--cyan); cursor: pointer; font: 600 12px 'IBM Plex Mono', monospace; letter-spacing: 1px; transition: .2s ease; }
+.map-profile-button:hover { border-color: var(--cyan); background: rgba(0, 217, 255, .09); box-shadow: 0 0 22px rgba(0, 217, 255, .1); }
+.map-profile-button i { font-style: normal; }
 
 .map-heading { position: absolute; z-index: 5; left: 36px; top: 115px; pointer-events: none; }
 .eyebrow, .panel-code { margin: 0 0 9px; color: var(--cyan); font: 500 12px 'IBM Plex Mono', monospace; letter-spacing: 1.3px; }
 .map-heading h1 { margin: 0; font-size: clamp(27px, 2.5vw, 42px); line-height: 1; letter-spacing: -1.8px; }
-.map-heading h1 span { color: transparent; -webkit-text-stroke: 1px #8490b8; }
+.map-heading h1 span { color: inherit; -webkit-text-stroke: 0; }
 .map-heading > p:last-child { margin: 9px 0; color: #707d97; font: 400 13px 'IBM Plex Mono', monospace; }
 
 .russia-map-stage {
@@ -160,11 +163,15 @@ button { color: inherit; }
 .zone-label-layer { pointer-events: none; }
 .zone-label-layer g { transition: opacity .2s ease; }
 .zone-label-layer g.is-dimmed { opacity: .08; }
-.zone-label-layer line { stroke: rgba(174, 198, 233, .42); stroke-width: 1; }
 .zone-label-layer text {
   fill: rgba(168, 186, 214, .72);
+  stroke: #05070d;
+  stroke-width: 4px;
+  paint-order: stroke fill;
   font: 500 11px 'IBM Plex Mono', monospace;
   letter-spacing: 1.4px;
+  text-anchor: middle;
+  dominant-baseline: middle;
   text-transform: uppercase;
 }
 .connection-layer { pointer-events: none; }
