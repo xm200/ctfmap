@@ -115,6 +115,9 @@ export const REGION_NAMES: Record<string, string> = {
   'RU-YAN': 'Ямало-Ненецкий автономный округ',
   'RU-YAR': 'Ярославская область',
   'RU-ZAB': 'Забайкальский край',
+  'RU-ZAP': 'Запорожская область',
+  'RU-KHE': 'Херсонская область',
+  'RU-SEV': 'Севастополь',
 };
 
 export function getRegionName(regionId: string, fallback = regionId): string {

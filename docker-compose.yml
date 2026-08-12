@@ -28,7 +28,10 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_BASE_URL: http://localhost:8080/api
+      # Браузер обращается к API через тот же origin, а Vite проксирует запрос
+      # внутри docker-сети. Это работает и с localhost, и при входе по IP.
+      VITE_API_BASE_URL: /api
+      VITE_API_PROXY_TARGET: http://api:8000
     depends_on:
       - api
     networks:

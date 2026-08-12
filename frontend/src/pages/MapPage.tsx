@@ -3,16 +3,20 @@ import { Brand } from '../components/Brand';
 import { EventCard } from '../components/EventCard';
 import { RussiaMap } from '../components/RussiaMap';
 import { RegionPanel } from '../components/RegionPanel';
-import { CATEGORY_META, events } from '../data/events';
+import { CATEGORY_META } from '../data/events';
+import { useAuth } from '../auth/AuthContext';
 import { getMacroZone, ZONE_LABELS } from '../data/regions';
 import type { CtfEvent, EventCategory, MacroZone } from '../types';
 
 interface MapPageProps {
+  events: CtfEvent[];
   onOpenEvent: (event: CtfEvent) => void;
   onOpenProfile: () => void;
+  onOpenAbout: () => void;
 }
 
-export function MapPage({ onOpenEvent, onOpenProfile }: MapPageProps) {
+export function MapPage({ events, onOpenEvent, onOpenProfile, onOpenAbout }: MapPageProps) {
+  const { isAuthenticated } = useAuth();
   const [activeZone, setActiveZone] = useState<MacroZone | 'all'>('all');
   const [activeCategories, setActiveCategories] = useState<Set<EventCategory>>(new Set(['elite', 'local', 'training']));
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -23,8 +27,8 @@ export function MapPage({ onOpenEvent, onOpenProfile }: MapPageProps) {
   const filteredEvents = useMemo(() => events.filter((event) => (
     activeCategories.has(event.category)
     && (activeZone === 'all' || getMacroZone(event.regionId) === activeZone)
-    && event.startOffsetDays <= 30
-  )), [activeCategories, activeZone]);
+    && event.startOffsetDays + event.durationDays >= 0
+  )), [activeCategories, activeZone, events]);
 
   const regionEvents = useMemo(
     () => selectedRegion ? filteredEvents.filter((event) => event.regionId === selectedRegion) : [],
@@ -67,15 +71,16 @@ export function MapPage({ onOpenEvent, onOpenProfile }: MapPageProps) {
             </button>
           ))}
         </nav>
-        <button className="map-profile-button" type="button" onClick={onOpenProfile}>
-          <span>ПРОФИЛЬ</span><i>→</i>
-        </button>
+        <div className="map-top-actions">
+          <button className="map-about-button" type="button" onClick={onOpenAbout}><span>О НАС</span></button>
+          {isAuthenticated && <button className="map-profile-button" type="button" onClick={onOpenProfile}><span>ПРОФИЛЬ</span><i>→</i></button>}
+        </div>
       </header>
 
       <section className="map-heading">
-        <p className="eyebrow">THREATSCAPE // CTF INTELLIGENCE</p>
+        <p className="eyebrow">ОБЗОР // CTF-СОРЕВНОВАНИЯ</p>
         <h1>КАРТА <span>СОРЕВНОВАНИЙ</span></h1>
-        <p>Актуальные CTF России · горизонт 30 дней</p>
+        <p>Актуальные и предстоящие CTF России</p>
       </section>
 
       <RussiaMap

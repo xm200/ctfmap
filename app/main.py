@@ -7,8 +7,9 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.database import engine, Base, async_session
-from app.models.user import User
-from app.routes import admin, analytics, auth, parser, profile
+from app.database_compat import ensure_extended_event_columns
+from app.models.user import User, UserRole
+from app.routes import admin, analytics, auth, events, parser, profile
 from app.utils.security import hash_password
 
 
@@ -16,19 +17,25 @@ from app.utils.security import hash_password
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(ensure_extended_event_columns)
 
     async with async_session() as db:
         existing = (await db.execute(select(User).where(User.username == "admin"))).scalar_one_or_none()
         if not existing:
-            db.add(User(
+            existing = User(
                 username="admin",
                 email="admin@ctfmap.local",
-                password_hash=hash_password("admin"),
-                role="admin",
-                verified=True,
-            ))
-            await db.commit()
-            print("Seeded admin user: admin / admin")
+            )
+            db.add(existing)
+
+        # Тестовая учётная запись должна оставаться доступной с фиксированными
+        # реквизитами даже при повторном использовании существующей БД.
+        existing.password_hash = hash_password("admin")
+        existing.role = UserRole.ADMIN
+        existing.verified = True
+        existing.banned = False
+        await db.commit()
+        print("Тестовая учётная запись администратора готова: admin / admin")
 
     print(f"PARSER_API_TOKEN: {settings.PARSER_API_TOKEN}")
     yield
@@ -55,11 +62,12 @@ async def generic_error_handler(request: Request, exc: Exception):
             body["code"] = exc.code
         return JSONResponse(status_code=exc.status_code, content=body)
 
-    return JSONResponse(status_code=500, content={"message": "Internal server error"})
+    return JSONResponse(status_code=500, content={"message": "Внутренняя ошибка сервера"})
 
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(profile.router, prefix="/api")
+app.include_router(events.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(parser.router)
 app.include_router(analytics.router)

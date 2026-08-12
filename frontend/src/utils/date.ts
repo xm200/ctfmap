@@ -35,10 +35,10 @@ export function getStartLabel(event: CtfEvent): string {
 
 export function getCountdownLabel(event: CtfEvent): string {
   const timing = getEventTiming(event);
-  if (timing.status === 'ongoing') return 'LIVE';
-  if (event.startOffsetDays <= 0) return 'SOON';
-  if (event.startOffsetDays === 1) return 'T−24H';
-  return `T−${String(event.startOffsetDays).padStart(2, '0')}D`;
+  if (timing.status === 'ongoing') return 'СЕЙЧАС';
+  if (event.startOffsetDays <= 0) return 'СКОРО';
+  if (event.startOffsetDays === 1) return '24 Ч';
+  return `${event.startOffsetDays} Д`;
 }
 
 export function getUrgencyLevel(event: CtfEvent): 'live' | 'critical' | 'near' | 'soon' | 'normal' {

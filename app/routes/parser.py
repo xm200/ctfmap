@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/parser", tags=["parser"])
 
 def verify_api_token(x_api_token: str = Header(...)) -> None:
     if x_api_token != settings.PARSER_API_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid API token")
+        raise HTTPException(status_code=401, detail="Неверный токен программного интерфейса")
 
 
 @router.post("/competitions", response_model=list[ParsedCompetitionOut])

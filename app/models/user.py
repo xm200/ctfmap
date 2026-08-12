@@ -8,7 +8,6 @@ from app.database import Base
 
 
 class UserRole(str, enum.Enum):
-    PARTICIPANT = "participant"
     ORGANIZER = "organizer"
     ADMIN = "admin"
 
@@ -20,8 +19,9 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     email: Mapped[str] = mapped_column(String(256), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(256))
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.PARTICIPANT)
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.ORGANIZER)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    banned: Mapped[bool] = mapped_column(Boolean, default=False)
 
     team: Mapped[str | None] = mapped_column(String(160))
     telegram: Mapped[str | None] = mapped_column(String(64))
