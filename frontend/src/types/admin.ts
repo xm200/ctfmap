@@ -1,7 +1,7 @@
-﻿export type UserRole = 'participant' | 'organizer' | 'admin';
+export type UserRole = 'participant' | 'organizer' | 'admin';
 export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 export type EventStatus = 'active' | 'draft' | 'archived';
-export type EventDifficulty = 'Начальный' | 'Средний' | 'Высокий' | 'Экспертный';
+export type EventDifficulty = '\u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0439' | '\u0421\u0440\u0435\u0434\u043d\u0438\u0439' | '\u0412\u044b\u0441\u043e\u043a\u0438\u0439' | '\u042d\u043a\u0441\u043f\u0435\u0440\u0442\u043d\u044b\u0439';
 export type EventFormat = 'online' | 'offline' | 'hybrid';
 export type EventCategory = 'elite' | 'local' | 'training';
 
@@ -14,6 +14,7 @@ export interface User {
   createdAt: string;
   city?: string;
   organization?: string;
+  telegram?: string;
 }
 
 export interface Session {
@@ -123,4 +124,18 @@ export interface UserUpdate {
   verified: boolean;
   city: string;
   organization: string;
+}
+
+/** Fields a participant may change on their own account. */
+export interface ProfileUpdate {
+  username: string;
+  email: string;
+  city: string;
+  organization: string;
+  telegram: string;
+}
+
+export interface PasswordChangeRequest {
+  currentPassword: string;
+  newPassword: string;
 }
