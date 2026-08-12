@@ -14,9 +14,9 @@ class ParsedCompetitionIn(BaseModel):
 class ParsedCompetitionOut(BaseModel):
     id: int
     name: str
-    url: str | None
-    start_date: datetime | None
-    location: str | None
+    url: str 
+    start_date: datetime 
+    location: str
     source_url: str
     created_at: datetime
 

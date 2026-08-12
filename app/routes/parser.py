@@ -56,18 +56,6 @@ async def ingest_competitions(
     return created
 
 
-@router.post("/competition", response_model=ParsedCompetitionOut)
-async def ingest_single(
-    item: ParsedCompetitionIn,
-    db: AsyncSession = Depends(get_db),
-    _: None = Depends(verify_api_token),
-):
-    batch_result = await ingest_competitions(
-        ParsedCompetitionBatch(competitions=[item]), db
-    )
-    return batch_result[0]
-
-
 @router.get("/competitions", response_model=list[ParsedCompetitionOut])
 async def list_competitions(
     limit: int = Query(50, le=200),
