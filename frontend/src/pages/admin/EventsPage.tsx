@@ -5,73 +5,111 @@ import { StatusIndicator } from '../../components/StatusIndicator';
 import type { AdminEvent } from '../../types/admin';
 import { CATEGORY_LABELS, FORMAT_LABELS, SOURCE_LABELS } from '../../utils/labels';
 
-interface EventFilters {
-  id: string;
-  competition: string;
-  organizer: string;
-  schedule: string;
-  location: string;
-  status: string;
+type EventSortKey = 'id' | 'competition' | 'organizer' | 'schedule' | 'location' | 'status';
+type SortDirection = 'asc' | 'desc';
+
+interface SortState<T> {
+  key: T;
+  direction: SortDirection;
 }
 
-const EMPTY_FILTERS: EventFilters = {
-  id: '',
-  competition: '',
-  organizer: '',
-  schedule: '',
-  location: '',
-  status: 'all',
-};
+const compareText = (left: string, right: string) => left.localeCompare(right, 'ru', { numeric: true, sensitivity: 'base' });
 
-const includes = (value: unknown, filter: string) => String(value ?? '').toLowerCase().includes(filter.trim().toLowerCase());
+const compareId = (left: string, right: string) => {
+  const leftNumber = Number(left);
+  const rightNumber = Number(right);
+  if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+    return leftNumber - rightNumber;
+  }
+  return compareText(left, right);
+};
 
 export function EventsPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [events, setEvents] = useState<AdminEvent[] | null>(null);
-  const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState<EventFilters>(EMPTY_FILTERS);
+  const [sort, setSort] = useState<SortState<EventSortKey> | null>(null);
 
   useEffect(() => { void eventsApi.list().then(setEvents); }, []);
 
-  const setFilter = (field: keyof EventFilters, value: string) => {
-    setFilters((current) => ({ ...current, [field]: value }));
+  const toggleSort = (key: EventSortKey) => {
+    setSort((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: 'asc' };
+      }
+      if (current.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+      return null;
+    });
   };
 
-  const filtered = useMemo(() => (events ?? []).filter((event) => {
-    const category = CATEGORY_LABELS[event.category];
-    const format = FORMAT_LABELS[event.format];
-    const source = SOURCE_LABELS[event.source] ?? event.source;
-    const globalValue = `${event.id} ${event.title} ${event.difficulty} ${category} ${event.organizer} ${source} ${event.startDate} ${event.endDate} ${event.city} ${format}`;
-    return includes(globalValue, query)
-      && includes(event.id, filters.id)
-      && includes(`${event.title} ${event.difficulty} ${category}`, filters.competition)
-      && includes(`${event.organizer} ${source}`, filters.organizer)
-      && includes(`${event.startDate} ${event.endDate}`, filters.schedule)
-      && includes(`${event.city} ${format}`, filters.location)
-      && (filters.status === 'all' || event.status === filters.status);
-  }), [events, query, filters]);
+  const sortedEvents = useMemo(() => {
+    const items = [...(events ?? [])];
+    if (!sort) {
+      return items;
+    }
 
-  const hasFilters = Boolean(query.trim()) || Object.entries(filters).some(([key, value]) => value !== (key === 'status' ? 'all' : ''));
-  const resetFilters = () => { setQuery(''); setFilters(EMPTY_FILTERS); };
+    const direction = sort.direction === 'asc' ? 1 : -1;
+    items.sort((left, right) => {
+      let result = 0;
+
+      switch (sort.key) {
+        case 'id':
+          result = compareId(left.id, right.id);
+          break;
+        case 'competition':
+          result = compareText(
+            `${left.title} ${left.difficulty} ${CATEGORY_LABELS[left.category]}`.trim(),
+            `${right.title} ${right.difficulty} ${CATEGORY_LABELS[right.category]}`.trim(),
+          );
+          break;
+        case 'organizer':
+          result = compareText(
+            `${left.organizer} ${SOURCE_LABELS[left.source] ?? left.source}`.trim(),
+            `${right.organizer} ${SOURCE_LABELS[right.source] ?? right.source}`.trim(),
+          );
+          break;
+        case 'schedule':
+          result = new Date(left.startDate).getTime() - new Date(right.startDate).getTime();
+          if (result === 0) {
+            result = new Date(left.endDate).getTime() - new Date(right.endDate).getTime();
+          }
+          break;
+        case 'location':
+          result = compareText(`${left.city} ${FORMAT_LABELS[left.format]}`.trim(), `${right.city} ${FORMAT_LABELS[right.format]}`.trim());
+          break;
+        case 'status':
+          result = compareText(left.status, right.status);
+          break;
+      }
+
+      return result * direction;
+    });
+
+    return items;
+  }, [events, sort]);
+
+  const renderSortIcon = (key: EventSortKey) => {
+    if (sort?.key !== key) {
+      return '↕';
+    }
+    return sort.direction === 'asc' ? '↑' : '↓';
+  };
 
   return <>
     <PageHeader code="АДМИНИСТРАТОР / СОРЕВНОВАНИЯ" title="Управление соревнованиями" description="Поиск, классификация и редактирование соревновательных узлов." actions={<div className="header-count"><span>ВСЕГО</span><b>{String(events?.length ?? 0).padStart(2, '0')}</b></div>} />
-    <div className="toolbar table-toolbar">
-      <label className="search-box"><span>⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ОБЩИЙ ПОИСК ПО ВСЕМ КОЛОНКАМ..." /></label>
-      <button type="button" className="filter-reset" onClick={resetFilters} disabled={!hasFilters}>СБРОСИТЬ ФИЛЬТРЫ</button>
-    </div>
     {!events ? <LoadingPanel /> : <section className="admin-table event-table">
-      <div className="table-row table-head"><span>ID</span><span>СОРЕВНОВАНИЕ</span><span>ОРГАНИЗАТОР</span><span>РАСПИСАНИЕ</span><span>МЕСТО / ФОРМАТ</span><span>СТАТУС</span><span /></div>
-      <div className="table-row table-filters">
-        <span><input aria-label="Фильтр по ID соревнования" value={filters.id} onChange={(event) => setFilter('id', event.target.value)} placeholder="ID" /></span>
-        <span><input aria-label="Фильтр по соревнованию" value={filters.competition} onChange={(event) => setFilter('competition', event.target.value)} placeholder="НАЗВАНИЕ / ТИП" /></span>
-        <span><input aria-label="Фильтр по организатору" value={filters.organizer} onChange={(event) => setFilter('organizer', event.target.value)} placeholder="ОРГАНИЗАТОР / ИСТОЧНИК" /></span>
-        <span><input aria-label="Фильтр по расписанию" value={filters.schedule} onChange={(event) => setFilter('schedule', event.target.value)} placeholder="ДАТА" /></span>
-        <span><input aria-label="Фильтр по месту или формату" value={filters.location} onChange={(event) => setFilter('location', event.target.value)} placeholder="МЕСТО / ФОРМАТ" /></span>
-        <span><select aria-label="Фильтр по статусу" value={filters.status} onChange={(event) => setFilter('status', event.target.value)}><option value="all">ВСЕ</option><option value="active">АКТИВНО</option><option value="draft">ЧЕРНОВИК</option><option value="archived">В АРХИВЕ</option></select></span><span />
+      <div className="table-row table-head">
+        <span><button type="button" className="table-sort" onClick={() => toggleSort('id')}><span className="table-sort__label">ID</span><span className="table-sort__icon">{renderSortIcon('id')}</span></button></span>
+        <span><button type="button" className="table-sort" onClick={() => toggleSort('competition')}><span className="table-sort__label">СОРЕВНОВАНИЕ</span><span className="table-sort__icon">{renderSortIcon('competition')}</span></button></span>
+        <span><button type="button" className="table-sort" onClick={() => toggleSort('organizer')}><span className="table-sort__label">ОРГАНИЗАТОР</span><span className="table-sort__icon">{renderSortIcon('organizer')}</span></button></span>
+        <span><button type="button" className="table-sort" onClick={() => toggleSort('schedule')}><span className="table-sort__label">РАСПИСАНИЕ</span><span className="table-sort__icon">{renderSortIcon('schedule')}</span></button></span>
+        <span><button type="button" className="table-sort" onClick={() => toggleSort('location')}><span className="table-sort__label">МЕСТО / ФОРМАТ</span><span className="table-sort__icon">{renderSortIcon('location')}</span></button></span>
+        <span><button type="button" className="table-sort" onClick={() => toggleSort('status')}><span className="table-sort__label">СТАТУС</span><span className="table-sort__icon">{renderSortIcon('status')}</span></button></span>
+        <span />
       </div>
-      {filtered.length === 0
-        ? <div className="table-empty"><EmptyPanel title="События не обнаружены" text="Измените параметры поискового протокола." /></div>
-        : filtered.map((event) => <button className="table-row" key={event.id} onClick={() => onNavigate(`/admin/events/${event.id}`)}><span className="mono-value">{event.id}</span><span><strong>{event.title}</strong><em>{event.difficulty} // {CATEGORY_LABELS[event.category]}</em></span><span>{event.organizer}<small>{SOURCE_LABELS[event.source] ?? event.source}</small></span><span>{event.startDate}<small>ДО {event.endDate}</small></span><span>{event.city}<small>{FORMAT_LABELS[event.format]}</small></span><span><StatusIndicator status={event.status} /></span><span className="row-arrow">→</span></button>)}
+      {sortedEvents.length === 0
+        ? <div className="table-empty"><EmptyPanel title="События не обнаружены" text="В системе пока нет соревнований для отображения." /></div>
+        : sortedEvents.map((event) => <button className="table-row" key={event.id} onClick={() => onNavigate(`/admin/events/${event.id}`)}><span className="mono-value">{event.id}</span><span><strong>{event.title}</strong><em>{event.difficulty} // {CATEGORY_LABELS[event.category]}</em></span><span>{event.organizer}<small>{SOURCE_LABELS[event.source] ?? event.source}</small></span><span>{event.startDate}<small>ДО {event.endDate}</small></span><span>{event.city}<small>{FORMAT_LABELS[event.format]}</small></span><span><StatusIndicator status={event.status} /></span><span className="row-arrow">→</span></button>)}
     </section>}
   </>;
 }
