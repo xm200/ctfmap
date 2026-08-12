@@ -9,9 +9,10 @@ import type { CtfEvent, EventCategory, MacroZone } from '../types';
 
 interface MapPageProps {
   onOpenEvent: (event: CtfEvent) => void;
+  onOpenProfile: () => void;
 }
 
-export function MapPage({ onOpenEvent }: MapPageProps) {
+export function MapPage({ onOpenEvent, onOpenProfile }: MapPageProps) {
   const [activeZone, setActiveZone] = useState<MacroZone | 'all'>('all');
   const [activeCategories, setActiveCategories] = useState<Set<EventCategory>>(new Set(['elite', 'local', 'training']));
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -66,10 +67,9 @@ export function MapPage({ onOpenEvent }: MapPageProps) {
             </button>
           ))}
         </nav>
-        <div className="system-status">
-          <span><i />LIVE FEED</span>
-          <small>NODE RU-01</small>
-        </div>
+        <button className="map-profile-button" type="button" onClick={onOpenProfile}>
+          <span>ПРОФИЛЬ</span><i>→</i>
+        </button>
       </header>
 
       <section className="map-heading">

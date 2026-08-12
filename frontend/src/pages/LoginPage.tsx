@@ -32,16 +32,11 @@ export function LoginPage({ onLogin, onNavigate }: Props) {
   };
 
   return <main className="auth-page">
-    <div className="noise" /><div className="auth-grid" /><div className="auth-scan" />
+    <div className="noise" />
     <header className="auth-top"><Brand /><button type="button" onClick={() => onNavigate('/')}>← RETURN TO MAP</button></header>
-    <section className="auth-brief">
-      <p className="panel-code">SECURE GATEWAY // 01</p><h1>OPERATOR<br /><span>ACCESS</span></h1>
-      <p>Авторизуйтесь для доступа к персональному узлу CTFMAP и операторским инструментам.</p>
-      <div className="auth-telemetry"><span><i /> GATEWAY ONLINE</span><span>TRANSPORT <b>TLS</b></span><span>NODE <b>RU-01</b></span></div>
-    </section>
     <form className="auth-panel" onSubmit={submit}>
       <div className="auth-panel-head"><span>IDENTITY CHALLENGE</span><b>AUTH / LOGIN</b></div>
-      <h2>Вход в систему</h2><p className="form-intro">Введите идентификатор оператора и пароль.</p>
+      <h2>Вход в систему</h2>
       {error && <InlineNotice kind="error">{error}</InlineNotice>}
       <label className="field"><span>EMAIL / USERNAME</span><input autoFocus value={identifier} onChange={(event) => setIdentifier(event.target.value)} required maxLength={254} autoComplete="username" /></label>
       <label className="field"><span>PASSWORD</span><input value={password} onChange={(event) => setPassword(event.target.value)} required maxLength={128} type="password" autoComplete="current-password" /></label>

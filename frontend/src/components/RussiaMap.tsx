@@ -32,9 +32,9 @@ const MAX_ZOOM = 4;
 const INITIAL_VIEWPORT: Viewport = { x: 0, y: 0, width: MAP_WIDTH, height: MAP_HEIGHT };
 
 const ZONE_LABEL_POINTS: Record<MacroZone, Position> = {
-  central: [54, 57],
-  siberia: [91, 61],
-  'far-east': [137, 62],
+  central: [47, 61],
+  siberia: [91, 66],
+  'far-east': [136, 62.5],
 };
 
 function normalizeLongitude(longitude: number): number {
@@ -347,18 +347,6 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
             })}
           </g>
 
-          <g className="zone-label-layer" aria-hidden="true">
-            {(Object.keys(ZONE_LABEL_POINTS) as MacroZone[]).map((zone) => {
-              const point = project(ZONE_LABEL_POINTS[zone]);
-              return (
-                <g key={zone} className={activeZone !== 'all' && activeZone !== zone ? 'is-dimmed' : ''} transform={`translate(${point.x} ${point.y})`}>
-                  <line x1="-28" x2="-8" />
-                  <text>{ZONE_LABELS[zone]}</text>
-                </g>
-              );
-            })}
-          </g>
-
           <g className="connection-layer" aria-hidden="true">
             {connectionPaths.map((connection, index) => (
               <g key={connection.id}>
@@ -406,6 +394,17 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
                     <circle cy="-32" r="1.6" />
                   </g>
                   <text className="event-marker__code" x="8" y="11">{CATEGORY_META[event.category].short}</text>
+                </g>
+              );
+            })}
+          </g>
+
+          <g className="zone-label-layer" aria-hidden="true">
+            {(Object.keys(ZONE_LABEL_POINTS) as MacroZone[]).map((zone) => {
+              const point = project(ZONE_LABEL_POINTS[zone]);
+              return (
+                <g key={zone} className={activeZone !== 'all' && activeZone !== zone ? 'is-dimmed' : ''} transform={`translate(${point.x} ${point.y})`}>
+                  <text>{ZONE_LABELS[zone]}</text>
                 </g>
               );
             })}
