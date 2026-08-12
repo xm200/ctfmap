@@ -6,7 +6,35 @@ export const CATEGORY_META: Record<EventCategory, { label: string; color: string
   training: { label: 'Тренировки', color: '#f4f7ff', short: 'TRAINING' },
 };
 
-export const events: CtfEvent[] = [
+const DEFAULT_SCHEDULE = [
+  { offsetDays: -2, time: '20:00', title: 'Окончание регистрации', description: 'После дедлайна состав команды фиксируется.' },
+  { offsetDays: 0, time: '10:00', title: 'Старт соревнования', description: 'Открывается платформа и публикуются задания.' },
+  { offsetDays: 1, time: '18:00', title: 'Финиш и заморозка таблицы', description: 'Решения после указанного времени не принимаются.' },
+  { offsetDays: 1, time: '20:00', title: 'Результаты и разборы', description: 'Организаторы публикуют таблицу и первые write-up.' },
+];
+
+const DEFAULT_MATERIALS = [
+  { title: 'CTF Field Guide', description: 'Базовая методология решения задач и организация командной работы.', url: 'https://ctf101.org/', level: 'Начальный' as const },
+  { title: 'PortSwigger Web Security Academy', description: 'Практические лабораторные работы для подготовки к web-категории.', url: 'https://portswigger.net/web-security', level: 'Средний' as const },
+  { title: 'pwn.college', description: 'Интерактивный курс по системной безопасности, reverse и binary exploitation.', url: 'https://pwn.college/', level: 'Высокий' as const },
+];
+
+const EVENT_DEFAULTS = {
+  ctftimeUrl: 'https://ctftime.org/',
+  ctfNewsUrl: 'https://ctfnews.ru/',
+  registrationUrl: 'https://ctftime.org/',
+  fullDescription: [
+    'Соревнование объединяет практические задачи по информационной безопасности и ориентировано на командное решение в ограниченное время.',
+    'Участникам предстоит анализировать приложения и инфраструктуру, находить уязвимости, восстанавливать данные и получать флаги. Формат подойдёт тем, кто хочет проверить навыки в условиях, близких к реальной работе специалистов по безопасности.',
+  ],
+  taskCategories: ['Web', 'Pwn', 'Reverse', 'Crypto', 'Forensics', 'OSINT'],
+  schedule: DEFAULT_SCHEDULE,
+  teamSize: '2–5 участников',
+  requirements: ['Ноутбук с Linux или виртуальной машиной', 'Стабильное интернет-соединение', 'Discord для связи с организаторами', 'Аккаунт на платформе соревнования'],
+  contacts: 'Организаторы отвечают на вопросы в Discord и Telegram соревнования.',
+};
+
+const rawEvents: Array<Omit<CtfEvent, keyof typeof EVENT_DEFAULTS> & Partial<Pick<CtfEvent, keyof typeof EVENT_DEFAULTS>>> = [
   {
     id: 'evt-001', slug: 'cyber-moscow-finals', title: 'Cyber Moscow Finals 2026', shortTitle: 'CMF 2026',
     category: 'elite', difficulty: 'Экспертный', format: 'hybrid', regionId: 'RU-MOW', city: 'Москва',
@@ -104,3 +132,9 @@ export const events: CtfEvent[] = [
     tags: ['Misc', 'OSINT', 'Network'],
   },
 ];
+
+export const events: CtfEvent[] = rawEvents.map((event) => ({
+  ...EVENT_DEFAULTS,
+  ...(event.category === 'training' ? { learningMaterials: DEFAULT_MATERIALS } : {}),
+  ...event,
+}));

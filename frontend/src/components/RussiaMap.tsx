@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CATEGORY_META } from '../data/events';
 import { getMacroZone, getRegionName, ZONE_COLORS, ZONE_LABELS } from '../data/regions';
 import type { CtfEvent, MacroZone, Position, RegionFeature, RegionGeometry } from '../types';
+import { getUrgencyLevel } from '../utils/date';
 
 interface RussiaMapProps {
   events: CtfEvent[];
@@ -372,10 +373,11 @@ export function RussiaMap({ events, activeZone, selectedRegion, onSelectRegion, 
           <g className="event-layer">
             {eventPoints.map(({ event, point }, index) => {
               const color = CATEGORY_META[event.category].color;
+              const urgency = getUrgencyLevel(event);
               return (
                 <g
                   key={event.id}
-                  className="event-marker"
+                  className={`event-marker event-marker--${urgency}`}
                   style={{ '--event-color': color, '--marker-delay': `${index * -0.16}s` } as React.CSSProperties}
                   transform={`translate(${point.x} ${point.y})`}
                   role="button"

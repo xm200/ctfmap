@@ -2,12 +2,18 @@ import { Brand } from '../components/Brand';
 import { CATEGORY_META } from '../data/events';
 import { getMacroZone, getRegionName, ZONE_LABELS } from '../data/regions';
 import type { CtfEvent } from '../types';
-import { formatDate, getEventTiming, getStartLabel } from '../utils/date';
+import { formatDate, getCountdownLabel, getEventTiming, getScheduleDate, getStartLabel } from '../utils/date';
 
 interface EventPageProps {
   event: CtfEvent;
   onBack: () => void;
 }
+
+const FORMAT_LABELS = {
+  online: 'Онлайн',
+  offline: 'Очно',
+  hybrid: 'Гибридный',
+} as const;
 
 export function EventPage({ event, onBack }: EventPageProps) {
   const meta = CATEGORY_META[event.category];
@@ -19,54 +25,127 @@ export function EventPage({ event, onBack }: EventPageProps) {
       <header className="topbar details-topbar">
         <Brand />
         <button className="back-button" type="button" onClick={onBack}>← Назад к карте</button>
-        <div className="system-status"><span><i />EVENT NODE</span><small>{event.id.toUpperCase()}</small></div>
+        <div className="system-status"><span><i />СОБЫТИЕ</span><small>{event.id.toUpperCase()}</small></div>
       </header>
 
-      <div className="details-grid">
-        <section className="details-hero">
-          <div className="details-breadcrumb">MAP / {getRegionName(event.regionId).toUpperCase()} / {event.shortTitle}</div>
-          <div className="event-category large"><i />{meta.label} // {event.format}</div>
-          <h1>{event.title}</h1>
-          <p className="details-lead">{event.description}</p>
-          <div className="details-tags">{event.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
-          <div className="details-actions">
-            <a className="button button--primary" href={event.url} target="_blank" rel="noreferrer">Официальная страница ↗</a>
-            <button className="button button--ghost" type="button" onClick={onBack}>Вернуться к карте</button>
+      <article className="event-dossier">
+        <header className="dossier-hero">
+          <div className="details-breadcrumb">CTFMAP / {getRegionName(event.regionId).toUpperCase()} / {event.shortTitle}</div>
+          <div className="dossier-hero__meta">
+            <span className="event-category large"><i />{meta.label}</span>
+            <span className={`dossier-live dossier-live--${timing.status}`}>{getCountdownLabel(event)} · {getStartLabel(event)}</span>
           </div>
+          <div className="dossier-hero__content">
+            <div>
+              <h1>{event.title}</h1>
+              <p>{event.description}</p>
+            </div>
+            <div className="dossier-score">
+              <span>Рейтинг CTFtime</span>
+              <strong>{event.rating.toFixed(1)}</strong>
+              <small>Вес события: {event.weight.toFixed(1)}</small>
+            </div>
+          </div>
+          <div className="dossier-actions">
+            <a className="button button--primary" href={event.registrationUrl} target="_blank" rel="noreferrer">Регистрация ↗</a>
+            <a className="button button--ghost" href={event.ctfNewsUrl} target="_blank" rel="noreferrer">Читать в CTF News ↗</a>
+            <a className="button button--ghost" href={event.ctftimeUrl} target="_blank" rel="noreferrer">Страница CTFtime ↗</a>
+            <a className="button button--ghost" href={event.url} target="_blank" rel="noreferrer">Сайт организатора ↗</a>
+          </div>
+        </header>
+
+        <section className="dossier-facts" aria-label="Ключевая информация">
+          <div><span>Даты</span><strong>{formatDate(timing.start)} — {formatDate(timing.end)}</strong></div>
+          <div><span>Формат</span><strong>{FORMAT_LABELS[event.format]}</strong></div>
+          <div><span>Команда</span><strong>{event.teamSize}</strong></div>
+          <div><span>Сложность</span><strong>{event.difficulty}</strong></div>
         </section>
 
-        <aside className="event-score hud-panel">
-          <p className="panel-code">CTFTIME SIGNAL</p>
-          <div className="score-ring"><strong>{event.rating.toFixed(1)}</strong><span>/ 100</span></div>
-          <div className="score-bar"><i style={{ width: `${event.rating}%` }} /></div>
-          <p>Рейтинг события по данным CTFtime</p>
-        </aside>
+        <div className="dossier-layout">
+          <div className="dossier-main">
+            <section className="dossier-section">
+              <p className="section-kicker">01 / ОБЗОР</p>
+              <h2>О соревновании</h2>
+              <div className="dossier-copy">
+                {event.fullDescription.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+              </div>
+              <div className="task-tags" aria-label="Категории заданий">
+                {event.taskCategories.map((category) => <span key={category}>{category}</span>)}
+              </div>
+            </section>
 
-        <section className="details-data hud-panel">
-          <p className="panel-code">OPERATION DATA</p>
-          <div className="data-row"><span>Статус</span><b className={`status status--${timing.status}`}>{getStartLabel(event)}</b></div>
-          <div className="data-row"><span>Начало</span><b>{formatDate(timing.start, true)}</b></div>
-          <div className="data-row"><span>Завершение</span><b>{formatDate(timing.end, true)}</b></div>
-          <div className="data-row"><span>Сложность</span><b>{event.difficulty}</b></div>
-          <div className="data-row"><span>Вес CTFtime</span><b>{event.weight.toFixed(1)}</b></div>
-          <div className="data-row"><span>Формат</span><b>{event.format.toUpperCase()}</b></div>
-        </section>
+            <section className="dossier-section">
+              <p className="section-kicker">02 / ТАЙМЛАЙН</p>
+              <h2>Расписание</h2>
+              <ol className="event-timeline">
+                {event.schedule.map((item, index) => (
+                  <li key={`${item.title}-${index}`}>
+                    <div className="timeline-date">
+                      <strong>{formatDate(getScheduleDate(event, item.offsetDays))}</strong>
+                      <span>{item.time}</span>
+                    </div>
+                    <div><h3>{item.title}</h3>{item.description && <p>{item.description}</p>}</div>
+                  </li>
+                ))}
+              </ol>
+            </section>
 
-        <section className="details-location hud-panel">
-          <p className="panel-code">REGION NODE</p>
-          <div className="location-radar"><i /><i /><i /><b /></div>
-          <h2>{event.city}</h2>
-          <p>{getRegionName(event.regionId)}</p>
-          <span>{ZONE_LABELS[getMacroZone(event.regionId)]}</span>
-          <small>{event.lat.toFixed(4)} N // {event.lng.toFixed(4)} E</small>
-        </section>
+            <section className="dossier-section">
+              <p className="section-kicker">03 / УЧАСТИЕ</p>
+              <h2>Что потребуется</h2>
+              <ul className="requirement-list">
+                {event.requirements.map((requirement) => <li key={requirement}>{requirement}</li>)}
+              </ul>
+            </section>
 
-        <section className="details-organizer hud-panel">
-          <p className="panel-code">ORGANIZER</p>
-          <span className="organizer-logo">{event.organizer.slice(0, 2).toUpperCase()}</span>
-          <div><h3>{event.organizer}</h3><p>Верифицированный организатор</p></div>
-        </section>
-      </div>
+            {event.learningMaterials && event.learningMaterials.length > 0 && (
+              <section className="dossier-section dossier-learning">
+                <p className="section-kicker">04 / ДОПОЛНИТЕЛЬНО</p>
+                <h2>Материалы для подготовки</h2>
+                <p className="section-intro">Организатор рекомендует эти материалы перед участием в соревновании.</p>
+                <div className="learning-grid">
+                  {event.learningMaterials.map((material, index) => (
+                    <a key={material.title} href={material.url} target="_blank" rel="noreferrer">
+                      <span>{String(index + 1).padStart(2, '0')} · {material.level}</span>
+                      <h3>{material.title}</h3>
+                      <p>{material.description}</p>
+                      <b>Открыть материал ↗</b>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          <aside className="dossier-sidebar">
+            <section>
+              <p className="section-kicker">СВОДКА</p>
+              <dl className="summary-list">
+                <div><dt>Статус</dt><dd className={`status status--${timing.status}`}>{getStartLabel(event)}</dd></div>
+                <div><dt>Начало</dt><dd>{formatDate(timing.start, true)}</dd></div>
+                <div><dt>Завершение</dt><dd>{formatDate(timing.end, true)}</dd></div>
+                <div><dt>Категория</dt><dd>{meta.label}</dd></div>
+                <div><dt>Формат</dt><dd>{FORMAT_LABELS[event.format]}</dd></div>
+                <div><dt>Город</dt><dd>{event.city}</dd></div>
+                <div><dt>Регион</dt><dd>{getRegionName(event.regionId)}</dd></div>
+                <div><dt>Зона</dt><dd>{ZONE_LABELS[getMacroZone(event.regionId)]}</dd></div>
+              </dl>
+            </section>
+
+            <section className="organizer-summary">
+              <p className="section-kicker">ОРГАНИЗАТОР</p>
+              <span className="organizer-logo">{event.organizer.slice(0, 2).toUpperCase()}</span>
+              <h3>{event.organizer}</h3>
+              <p>{event.contacts}</p>
+            </section>
+
+            <section className="dossier-note">
+              <p className="section-kicker">ВАЖНО</p>
+              <p>Проверьте дедлайн регистрации и правила соревнования на официальной странице. Расписание организатора имеет приоритет.</p>
+            </section>
+          </aside>
+        </div>
+      </article>
     </main>
   );
 }
