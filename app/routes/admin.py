@@ -95,6 +95,7 @@ def _registration_out(r: CompetitionRegistration) -> dict:
         requirements=r.requirements or [],
         status=r.status.value if hasattr(r.status, "value") else r.status,
         comment=r.comment,
+        ai_review=r.ai_review,
     ).model_dump(by_alias=True)
 
 

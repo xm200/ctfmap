@@ -5,6 +5,12 @@ from sqlalchemy.engine import Connection
 
 
 _TABLE_COLUMNS: dict[str, tuple[tuple[str, str], ...]] = {
+    "parsed_competitions": (
+        ("source_url", "VARCHAR(512)"),
+        ("raw_json", "TEXT"),
+        ("raw_html", "TEXT"),
+        ("analysis_status", "VARCHAR(16) DEFAULT 'pending'"),
+    ),
     "users": (
         ("banned", "BOOLEAN NOT NULL DEFAULT FALSE"),
     ),
@@ -20,6 +26,8 @@ _TABLE_COLUMNS: dict[str, tuple[tuple[str, str], ...]] = {
         ("task_categories", "JSON"),
         ("tags", "JSON"),
         ("requirements", "JSON"),
+        ("user_id", "INTEGER REFERENCES users(id)"),
+        ("ai_review", "TEXT"),
     ),
     "events": (
         ("registration_url", "VARCHAR(512)"),
@@ -53,5 +61,5 @@ def ensure_extended_event_columns(connection: Connection) -> None:
     # Сохраняем существующие аккаунты, переводя их в роль организатора.
     if "users" in tables:
         connection.execute(
-            text("UPDATE users SET role = 'ORGANIZER' WHERE role = 'PARTICIPANT'")
+            text("UPDATE users SET role = 'ORGANIZER' WHERE role::text = 'PARTICIPANT'")
         )

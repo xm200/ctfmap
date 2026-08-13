@@ -23,6 +23,10 @@ class Settings(BaseSettings):
 
     CATEGORIES: list[str] = ["web", "crypto", "pwn", "reverse", "forensics", "osint", "misc"]
 
+    DEEPSEEK_API_KEY: str = ""
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    DEEPSEEK_MODEL: str = "deepseek-chat"
+
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",

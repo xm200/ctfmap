@@ -1,13 +1,14 @@
 import json
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
 from app.models.parsed_competition import ParsedCompetition
-from app.schemas.parser import ParsedCompetitionBatch, ParsedCompetitionIn, ParsedCompetitionOut
+from app.schemas.parser import ParsedCompetitionBatch, ParsedCompetitionOut
+from app.services.analyzer import analyze_competition
 
 router = APIRouter(prefix="/api/parser", tags=["parser"])
 
@@ -20,6 +21,7 @@ def verify_api_token(x_api_token: str = Header(...)) -> None:
 @router.post("/competitions", response_model=list[ParsedCompetitionOut])
 async def ingest_competitions(
     batch: ParsedCompetitionBatch,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     _: None = Depends(verify_api_token),
 ):
@@ -37,6 +39,9 @@ async def ingest_competitions(
             existing.start_date = item.start_date
             existing.location = item.location
             existing.raw_json = json.dumps(item.model_dump(), default=str)
+            if item.raw_html:
+                existing.raw_html = item.raw_html
+                existing.analysis_status = "pending"
             created.append(existing)
         else:
             comp = ParsedCompetition(
@@ -46,6 +51,8 @@ async def ingest_competitions(
                 location=item.location,
                 source_url=item.source_url,
                 raw_json=json.dumps(item.model_dump(), default=str),
+                raw_html=item.raw_html,
+                analysis_status="pending" if item.raw_html else "pending",
             )
             db.add(comp)
             created.append(comp)
@@ -53,7 +60,31 @@ async def ingest_competitions(
     await db.commit()
     for c in created:
         await db.refresh(c)
+
+    for c in created:
+        if c.raw_html:
+            background_tasks.add_task(analyze_competition, c.id)
+
     return created
+
+
+@router.post("/reanalyze/{competition_id}")
+async def reanalyze(
+    competition_id: int,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(verify_api_token),
+):
+    comp = await db.get(ParsedCompetition, competition_id)
+    if not comp:
+        raise HTTPException(404, detail="Запись не найдена")
+    if not comp.raw_html:
+        raise HTTPException(422, detail="HTML-содержимое отсутствует")
+
+    comp.analysis_status = "pending"
+    await db.commit()
+    background_tasks.add_task(analyze_competition, comp.id)
+    return {"status": "queued"}
 
 
 @router.get("/competitions", response_model=list[ParsedCompetitionOut])

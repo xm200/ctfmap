@@ -12,7 +12,11 @@ class ParsedCompetition(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256), index=True)
     url: Mapped[str | None] = mapped_column(String(512))
-    start_date: Mapped[datetime] = mapped_column(DateTime)
-    location: Mapped[str] = mapped_column(String(256))
+    start_date: Mapped[datetime | None] = mapped_column(DateTime)
+    location: Mapped[str | None] = mapped_column(String(256))
+    source_url: Mapped[str] = mapped_column(String(512), unique=True, index=True)
+    raw_json: Mapped[str | None] = mapped_column(Text)
+    raw_html: Mapped[str | None] = mapped_column(Text)
+    analysis_status: Mapped[str] = mapped_column(String(16), default="pending")
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

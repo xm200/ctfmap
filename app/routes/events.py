@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,8 +10,10 @@ from app.database import get_db
 from app.models.event import Event, EventStatus
 from app.models.registration import CompetitionRegistration
 from app.models.user import User
+from app.models.verification import ReviewStatus
 from app.schemas.admin import RegistrationCreate, RegistrationOut
 from app.schemas.event import EventOut
+from app.services.analyzer import validate_registration_task
 from app.utils.security import get_current_user
 
 router = APIRouter(prefix="/events", tags=["events"])
@@ -90,6 +92,7 @@ def _registration_out(registration: CompetitionRegistration) -> dict:
         requirements=registration.requirements or [],
         status=registration.status.value if hasattr(registration.status, "value") else registration.status,
         comment=registration.comment,
+        ai_review=registration.ai_review,
     ).model_dump(by_alias=True)
 
 
@@ -103,9 +106,21 @@ async def list_public_events(db: AsyncSession = Depends(get_db)):
 @router.post("/registrations", status_code=status.HTTP_201_CREATED)
 async def submit_registration(
     request: RegistrationCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
 ):
+    existing = (
+        await db.execute(
+            select(CompetitionRegistration).where(
+                CompetitionRegistration.user_id == user.id,
+                CompetitionRegistration.status == ReviewStatus.PENDING,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing:
+        raise HTTPException(409, detail="У вас уже есть заявка на рассмотрении")
+
     if request.format not in {"online", "offline", "hybrid"}:
         raise HTTPException(422, detail="Неизвестный формат соревнования")
     if request.category not in {"elite", "local", "training"}:
@@ -123,6 +138,7 @@ async def submit_registration(
         raise HTTPException(422, detail="Дата завершения не может быть раньше даты начала")
 
     registration = CompetitionRegistration(
+        user_id=user.id,
         title=request.title.strip(),
         short_title=request.short_title.strip(),
         organizer=request.organizer.strip(),
@@ -148,6 +164,9 @@ async def submit_registration(
     db.add(registration)
     await db.commit()
     await db.refresh(registration)
+
+    background_tasks.add_task(validate_registration_task, registration.id)
+
     return _registration_out(registration)
 
 

@@ -119,6 +119,14 @@ export interface CompetitionRegistrationTicket {
   requirements?: string[];
   status: ReviewStatus;
   comment?: string;
+  aiReview?: string;
+}
+
+export interface AiReview {
+  verdict: 'approve' | 'review' | 'reject';
+  confidence: number;
+  summary: string;
+  suggestions: string[];
 }
 
 export interface CompetitionRegistrationRequest {

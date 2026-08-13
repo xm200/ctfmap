@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Integer, JSON, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, JSON, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -11,6 +11,7 @@ class CompetitionRegistration(Base):
     __tablename__ = "competition_registrations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
     title: Mapped[str] = mapped_column(String(256))
     short_title: Mapped[str | None] = mapped_column(String(64))
     organizer: Mapped[str | None] = mapped_column(String(256))
@@ -34,5 +35,6 @@ class CompetitionRegistration(Base):
     requirements: Mapped[list | None] = mapped_column(JSON, default=list)
     status: Mapped[ReviewStatus] = mapped_column(Enum(ReviewStatus), default=ReviewStatus.PENDING)
     comment: Mapped[str | None] = mapped_column(Text)
+    ai_review: Mapped[str | None] = mapped_column(Text)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

@@ -43,6 +43,7 @@ class RegistrationOut(CamelModel):
     requirements: list[str] = Field(default_factory=list)
     status: str
     comment: str | None = None
+    ai_review: str | None = None
 
 
 class RegistrationUpdate(CamelModel):

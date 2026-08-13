@@ -17,11 +17,26 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://ctfmap:ctfmap@db:5432/ctfmap
       DATABASE_URL_SYNC: postgresql+psycopg2://ctfmap:ctfmap@db:5432/ctfmap
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      PARSER_API_TOKEN: ${PARSER_API_TOKEN:-changeme}
     depends_on:
       - db
     networks:
       - internal
       - external
+
+  scraper:
+    build: ./parser
+    environment:
+      API_URL: http://api:8000
+      API_TOKEN: ${PARSER_API_TOKEN:-changeme}
+      CTFTIME_PROXY: ${CTFTIME_PROXY:-}
+    depends_on:
+      - api
+    networks:
+      - internal
+      - external
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
